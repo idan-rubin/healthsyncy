@@ -14,7 +14,7 @@ public static class Program
 [Register("AppDelegate")]
 public sealed class AppDelegate : UIApplicationDelegate
 {
-    public override UIWindow? Window { get; set; }
+
     private readonly HealthReader reader = new();
     private readonly HttpClient http = new(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(15) };
     private readonly SemaphoreSlim gate = new(1);
@@ -23,6 +23,12 @@ public sealed class AppDelegate : UIApplicationDelegate
     private readonly UITextField token = new() { Placeholder = "Device upload token", SecureTextEntry = true, BorderStyle = UITextBorderStyle.RoundedRect };
 
     public override bool FinishedLaunching(UIApplication application, NSDictionary? launchOptions)
+    {
+        if (NSUserDefaults.StandardUserDefaults.BoolForKey("paired")) reader.Observe(Sync);
+        return true;
+    }
+
+    internal UIWindow CreateWindow(UIWindowScene scene)
     {
         var view = new UIViewController();
         view.View!.BackgroundColor = UIColor.SystemBackground;
@@ -77,14 +83,13 @@ public sealed class AppDelegate : UIApplicationDelegate
         var safe = view.View.SafeAreaLayoutGuide;
         NSLayoutConstraint.ActivateConstraints([stack.LeadingAnchor.ConstraintEqualTo(safe.LeadingAnchor, 20),
             stack.TrailingAnchor.ConstraintEqualTo(safe.TrailingAnchor, -20), stack.TopAnchor.ConstraintEqualTo(safe.TopAnchor, 24)]);
-        Window = new UIWindow(UIScreen.MainScreen.Bounds) { RootViewController = view };
-        Window.MakeKeyAndVisible();
+        var window = new UIWindow(scene) { RootViewController = view };
+        window.MakeKeyAndVisible();
         host.Text = Pairing.Load()?.Origin;
-        if (NSUserDefaults.StandardUserDefaults.BoolForKey("paired")) reader.Observe(Sync);
-        return true;
+        return window;
     }
 
-    public override void OnActivated(UIApplication application)
+    internal void Refresh()
     {
         if (NSUserDefaults.StandardUserDefaults.BoolForKey("paired")) _ = Run(Sync);
     }
@@ -122,5 +127,23 @@ public sealed class AppDelegate : UIApplicationDelegate
             BeginInvokeOnMainThread(() => status.Text = sent == 0 ? "No readable activity yet." : $"Synced {sent} days at {DateTime.Now:t}.");
         }
         finally { gate.Release(); }
+    }
+}
+
+
+[Register("SceneDelegate")]
+public sealed class SceneDelegate : UIWindowSceneDelegate
+{
+    public override UIWindow? Window { get; set; }
+
+    public override void WillConnect(UIScene scene, UISceneSession session, UISceneConnectionOptions options)
+    {
+        if (scene is UIWindowScene windowScene && UIApplication.SharedApplication.Delegate is AppDelegate app)
+            Window = app.CreateWindow(windowScene);
+    }
+
+    public override void DidBecomeActive(UIScene scene)
+    {
+        if (UIApplication.SharedApplication.Delegate is AppDelegate app) app.Refresh();
     }
 }

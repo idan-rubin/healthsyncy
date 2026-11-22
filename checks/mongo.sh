@@ -21,8 +21,11 @@ done
 docker exec "$container" mongosh --quiet --host 127.0.0.1 --username connector --password "$MONGO_CONNECTOR" \
   --authenticationDatabase activity --eval '
     const a = db.getSiblingDB("activity");
-    assert.commandWorked(a.runCommand({find:"days", filter:{}}));
-    assert.commandFailedWithCode(a.runCommand({find:"settings", filter:{}}), 13);
-    assert.commandFailedWithCode(a.runCommand({insert:"days", documents:[{_id:"forbidden"}]}), 13);'
+    if (a.runCommand({find:"days", filter:{}}).ok !== 1) throw Error("Connector read failed");
+    for (const command of [{find:"settings",filter:{}},{insert:"days",documents:[{_id:"forbidden"}]}]) {
+      let code;
+      try { code = a.runCommand(command).code; } catch (e) { code = e.code; }
+      if (code !== 13) throw Error("Expected unauthorized Mongo operation");
+    }'
 dotnet run --project checks/HealthSynki.Checks -c Release
 checks/http.sh
