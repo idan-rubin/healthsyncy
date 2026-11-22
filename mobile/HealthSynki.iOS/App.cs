@@ -131,6 +131,7 @@ public sealed class AppDelegate : UIApplicationDelegate
 }
 
 
+[Preserve(AllMembers = true)]
 [Register("SceneDelegate")]
 public sealed class SceneDelegate : UIWindowSceneDelegate
 {
