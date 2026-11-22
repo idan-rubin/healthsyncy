@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0"><dict>
+<key>UIDeviceFamily</key><array><integer>1</integer></array>
+<key>UILaunchScreen</key><dict/>
+<key>NSHealthShareUsageDescription</key><string>Send daily steps, active and resting calories and Activity ring totals to your HealthSynki server.</string>
+</dict></plist>

@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="src/Libraries/HealthSynki.Core/HealthSynki.Core.csproj" />
+  <Project Path="src/Services/HealthSynki.Sync/HealthSynki.Sync.EntryPoint/HealthSynki.Sync.EntryPoint.csproj" />
+  <Project Path="src/Services/HealthSynki.Connector/HealthSynki.Connector.EntryPoint/HealthSynki.Connector.EntryPoint.csproj" />
+  <Project Path="src/Services/HealthSynki.Admin/HealthSynki.Admin.EntryPoint/HealthSynki.Admin.EntryPoint.csproj" />
+</Solution>

@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+.env
+*.user
+.DS_Store
+.env.*
+*.bootstrap.json
+secrets/
+*.p12
+*.mobileprovision
+__pycache__/

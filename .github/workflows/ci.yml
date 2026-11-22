@@ -1,0 +1,33 @@
+name: Code checks
+on:
+  pull_request:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 11.0.x
+      - run: dotnet restore HealthSynki.slnx
+      - run: dotnet build HealthSynki.slnx -c Release --no-restore
+      - run: checks/mongo.sh
+      - run: python3 checks/manifests.py
+  ios:
+    runs-on: xcode-27
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 11.0.100
+      - run: sudo xcode-select --switch /Applications/Xcode_27.2.app/Contents/Developer
+      - run: dotnet workload install ios --version 11.0.100.1
+      - run: dotnet build HealthSynki.iOS -c Debug -r iossimulator-arm64

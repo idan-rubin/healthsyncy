@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net11.0-ios</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <ApplicationTitle>HealthSynki</ApplicationTitle>
+    <ApplicationId Condition="'$(ApplicationId)' == ''">org.healthsynki.companion</ApplicationId>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+    <SupportedOSPlatformVersion>18.0</SupportedOSPlatformVersion>
+    <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/Libraries/HealthSynki.Core/ActivityData.cs" Link="ActivityData.cs" />
+  </ItemGroup>
+</Project>
