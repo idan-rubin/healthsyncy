@@ -1,6 +1,19 @@
 using HealthSynki.Core;
 using MongoDB.Driver;
 
+var registration = new BackgroundRegistration();
+var attempts = new List<string>();
+Task<bool> Enable(string metric)
+{
+    attempts.Add(metric);
+    return Task.FromResult(metric == "steps" || attempts.Count(x => x == metric) > 1);
+}
+string[] metrics = ["steps", "energy"];
+Verify((await registration.Ensure(metrics, Enable)).SequenceEqual(["energy"]), "report failed registration");
+await Task.WhenAll(registration.Ensure(metrics, Enable), registration.Ensure(metrics, Enable));
+Verify(attempts.SequenceEqual(["steps", "energy", "energy"]), "retry only failed registrations");
+Verify((await registration.Ensure(metrics, Enable)).Count == 0, "registration recovered");
+
 var client = new MongoClient(Environment.GetEnvironmentVariable("TEST_MONGO_URI")
     ?? throw new InvalidOperationException("Set TEST_MONGO_URI to a disposable local MongoDB instance."));
 var dbName = "healthsynki_checks_" + Guid.NewGuid().ToString("N");

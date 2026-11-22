@@ -21,21 +21,42 @@ internal sealed class HealthReader
         if (!await done.Task) throw new InvalidOperationException("HealthKit authorization could not finish.");
     }
 
-    public void Observe(Func<Task> sync)
+    private readonly BackgroundRegistration registration = new();
+
+    public Task<IReadOnlyList<string>> Observe(Func<Task> sync, Action<string> report)
     {
-        if (observers.Count != 0) return;
-        foreach (var type in new[] { steps, resting, energy })
+        Dictionary<string, HKQuantityType> metrics = new()
         {
-            var query = new HKObserverQuery(type, null, async (_, complete, error) =>
+            ["steps"] = steps, ["resting energy"] = resting, ["active energy"] = energy
+        };
+        if (observers.Count == 0)
+        {
+            foreach (var (name, type) in metrics)
             {
-                try { if (error is null) await sync(); }
-                catch (Exception) { /* A later foreground or HealthKit wake retries the current window. */ }
-                finally { complete(); }
-            });
-            observers.Add(query);
-            store.ExecuteQuery(query);
-            store.EnableBackgroundDelivery(type, HKUpdateFrequency.Hourly, (_, _) => { });
+                var query = new HKObserverQuery(type, null, async (_, complete, error) =>
+                {
+                    try
+                    {
+                        if (error is null) await sync();
+                        else report($"HealthKit could not deliver {name} ({error.Code}).");
+                    }
+                    catch (Exception e)
+                    {
+                        report(e is InvalidOperationException ? e.Message : "Background upload failed. Retry with Sync now.");
+                    }
+                    finally { complete(); }
+                });
+                observers.Add(query);
+                store.ExecuteQuery(query);
+            }
         }
+        return registration.Ensure(metrics.Keys, name =>
+        {
+            var result = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            store.EnableBackgroundDelivery(metrics[name], HKUpdateFrequency.Hourly,
+                (ok, error) => result.TrySetResult(ok && error is null));
+            return result.Task.WaitAsync(TimeSpan.FromSeconds(15));
+        });
     }
 
     public async Task<DailyTotals> Read(DateOnly day, TimeZoneInfo zone)

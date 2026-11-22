@@ -10,6 +10,7 @@
     <CodesignEntitlements Condition="'$(RuntimeIdentifier)' != 'iossimulator-arm64' and '$(RuntimeIdentifier)' != 'iossimulator-x64'">DeviceEntitlements.plist</CodesignEntitlements>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../src/Libraries/HealthSynki.Core/BackgroundRegistration.cs" Link="BackgroundRegistration.cs" />
     <Compile Include="../../src/Libraries/HealthSynki.Core/ActivityData.cs" Link="ActivityData.cs" />
   </ItemGroup>
 </Project>

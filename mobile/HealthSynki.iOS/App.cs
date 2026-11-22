@@ -19,12 +19,14 @@ public sealed class AppDelegate : UIApplicationDelegate
     private readonly HttpClient http = new(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(15) };
     private readonly SemaphoreSlim gate = new(1);
     private readonly UILabel status = new() { Lines = 0 };
+    private readonly UILabel background = new() { Lines = 0 };
+    private readonly UILabel lastUpload = new() { Lines = 0 };
     private readonly UITextField host = new() { Placeholder = "HTTPS sync server", BorderStyle = UITextBorderStyle.RoundedRect, AutocapitalizationType = UITextAutocapitalizationType.None, AutocorrectionType = UITextAutocorrectionType.No };
     private readonly UITextField token = new() { Placeholder = "Device upload token", SecureTextEntry = true, BorderStyle = UITextBorderStyle.RoundedRect };
 
     public override bool FinishedLaunching(UIApplication application, NSDictionary? launchOptions)
     {
-        if (NSUserDefaults.StandardUserDefaults.BoolForKey("paired")) reader.Observe(Sync);
+        if (NSUserDefaults.StandardUserDefaults.BoolForKey("paired")) _ = RegisterBackground();
         return true;
     }
 
@@ -45,10 +47,10 @@ public sealed class AppDelegate : UIApplicationDelegate
             new Pairing(url.GetLeftPart(UriPartial.Authority), token.Text!).Save();
             token.Text = "";
             NSUserDefaults.StandardUserDefaults.SetBool(true, "paired");
-            reader.Observe(Sync);
+            _ = RegisterBackground();
             await Sync();
         });
-        refresh.TouchUpInside += async (_, _) => await Run(Sync);
+        refresh.TouchUpInside += (_, _) => Refresh();
         var share = UIButton.FromType(UIButtonType.System);
         share.SetTitle("Share today’s summary", UIControlState.Normal);
         share.TouchUpInside += async (_, _) => await Run(async () =>
@@ -77,7 +79,7 @@ public sealed class AppDelegate : UIApplicationDelegate
             });
         });
         var title = new UILabel { Text = "HealthSynki", Font = UIFont.BoldSystemFontOfSize(32) };
-        var stack = new UIStackView(new UIView[] { title, host, token, connect, refresh, share, status })
+        var stack = new UIStackView(new UIView[] { title, host, token, connect, refresh, share, background, lastUpload, status })
             { Axis = UILayoutConstraintAxis.Vertical, Spacing = 12, TranslatesAutoresizingMaskIntoConstraints = false };
         view.View.AddSubview(stack);
         var safe = view.View.SafeAreaLayoutGuide;
@@ -86,12 +88,29 @@ public sealed class AppDelegate : UIApplicationDelegate
         var window = new UIWindow(scene) { RootViewController = view };
         window.MakeKeyAndVisible();
         host.Text = Pairing.Load()?.Origin;
+        lastUpload.Text = NSUserDefaults.StandardUserDefaults.StringForKey("lastUpload");
         return window;
     }
 
     internal void Refresh()
     {
-        if (NSUserDefaults.StandardUserDefaults.BoolForKey("paired")) _ = Run(Sync);
+        if (!NSUserDefaults.StandardUserDefaults.BoolForKey("paired")) return;
+        _ = RegisterBackground();
+        _ = Run(Sync);
+    }
+
+    private async Task RegisterBackground()
+    {
+        try
+        {
+            var failed = await reader.Observe(Sync, message => BeginInvokeOnMainThread(() => status.Text = message));
+            background.Text = failed.Count == 0 ? "Background delivery enabled." :
+                $"Background delivery unavailable for {string.Join(", ", failed)}. Tap Sync now to retry.";
+        }
+        catch (Exception e)
+        {
+            background.Text = $"Background registration failed ({e.GetType().Name}). Tap Sync now to retry.";
+        }
     }
 
     private async Task Run(Func<Task> action)
@@ -124,7 +143,14 @@ public sealed class AppDelegate : UIApplicationDelegate
                 if (!response.IsSuccessStatusCode) throw new InvalidOperationException($"Upload failed (HTTP {(int)response.StatusCode}).");
                 sent++;
             }
-            BeginInvokeOnMainThread(() => status.Text = sent == 0 ? "No readable activity yet." : $"Synced {sent} days at {DateTime.Now:t}.");
+            BeginInvokeOnMainThread(() =>
+            {
+                status.Text = sent == 0 ? "No readable activity yet." : "";
+                if (sent == 0) return;
+                var message = $"Last upload: {DateTimeOffset.Now:g} ({sent} days).";
+                NSUserDefaults.StandardUserDefaults.SetString(message, "lastUpload");
+                lastUpload.Text = message;
+            });
         }
         finally { gate.Release(); }
     }

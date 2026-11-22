@@ -4,7 +4,7 @@ work=$(mktemp -d)
 pids=()
 trap 'for pid in "${pids[@]}"; do kill "$pid" 2>/dev/null || true; done; rm -rf "$work"' EXIT
 export MongoUri="${TEST_MONGO_URI:?}" OAuthIssuer=https://localhost:5510 OwnerSubject=synthetic-owner
-export McpResource=https://synthetic.invalid/mcp AdminOrigin=https://admin.synthetic.invalid
+export McpResource=https://synthetic.invalid/mcp AdminOrigin=https://localhost:5513
 export AdminSubject=synthetic-admin AdminClientId=synthetic-client AdminClientSecret=synthetic-secret
 export KeyDirectory="$work/keys"
 openssl req -x509 -newkey rsa:2048 -nodes -keyout "$work/issuer.key" -out "$work/issuer.crt" \
@@ -20,7 +20,12 @@ port=5500
 for role in Sync Connector Admin; do
   port=$((port + 1))
   role_uri="${role^^}_MONGO_URI"
-  MongoUri="${!role_uri:-$MongoUri}" ASPNETCORE_URLS="http://127.0.0.1:$port" dotnet "src/Services/HealthSynki.$role/HealthSynki.$role.EntryPoint/bin/Release/net11.0/HealthSynki.$role.EntryPoint.dll" >"$work/$role.log" 2>&1 &
+  urls="http://127.0.0.1:$port"
+  if [[ $role == Admin ]]; then
+    urls+=";https://127.0.0.1:5513"
+    export Kestrel__Certificates__Default__Path="$work/issuer.crt" Kestrel__Certificates__Default__KeyPath="$work/issuer.key"
+  fi
+  MongoUri="${!role_uri:-$MongoUri}" ASPNETCORE_URLS="$urls" dotnet "src/Services/HealthSynki.$role/HealthSynki.$role.EntryPoint/bin/Release/net11.0/HealthSynki.$role.EntryPoint.dll" >"$work/$role.log" 2>&1 &
   pids+=("$!")
   for i in {1..50}; do curl -fsS "http://127.0.0.1:$port/readyz" >/dev/null 2>&1 && break; sleep 1; done
   curl -fsS "http://127.0.0.1:$port/readyz" || { cat "$work/$role.log"; exit 1; }
@@ -53,6 +58,14 @@ done
 expect 200 -H "$(auth_header valid)" "$read_url"
 python3 -c 'import json,sys; assert json.load(open(sys.argv[1]))["totals"]["steps"] == 123' "$work/body"
 expect 302 http://127.0.0.1:5503/
+portal=(curl -fsS --cacert "$SSL_CERT_FILE" -b "$work/cookies" -c "$work/cookies")
+"${portal[@]}" -L --max-redirs 6 "$AdminOrigin/" > "$work/portal"
+csrf=$(sed -n 's/.*name="__RequestVerificationToken"[^>]*value="\([^"]*\)".*/\1/p' "$work/portal")
+[[ -n $csrf ]]
+"${portal[@]}" --data-urlencode "__RequestVerificationToken=$csrf" --data "Enabled=false&StaleAfterMinutes=75" "$AdminOrigin/" >/dev/null
+"${portal[@]}" "$AdminOrigin/" > "$work/portal"
+grep -q 'Uploads paused' "$work/portal"
+expect 423 -X PUT "$url" -H "Authorization: Bearer $token" --json "$data"
 mcp="http://127.0.0.1:5502/mcp"
 mcp_headers=(-H "$(auth_header valid)" -H 'Accept: application/json, text/event-stream' -H 'MCP-Protocol-Version: 2025-11-25')
 expect 200 "${mcp_headers[@]}" "$mcp" --json '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"smoke","version":"1.0"}}}'
