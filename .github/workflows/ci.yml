@@ -39,12 +39,17 @@ jobs:
           xcrun simctl bootstatus "$device" -b
           app=$(find HealthSynki.iOS/bin/Debug/net11.0-ios/iossimulator-arm64 -maxdepth 1 -name '*.app' -print -quit)
           bundle=$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$app/Info.plist")
-          codesign --force --deep --sign - "$app"
+          codesign --force --sign - --entitlements HealthSynki.iOS/DeviceEntitlements.plist "$app"
           xcrun simctl install "$device" "$app"
-          launch=$(xcrun simctl launch "$device" "$bundle")
+          launch=$(xcrun simctl launch --stdout="$RUNNER_TEMP/companion.out" --stderr="$RUNNER_TEMP/companion.err" "$device" "$bundle")
+          echo "$launch"
           pid=${launch##*: }
           [[ "$pid" =~ ^[0-9]+$ ]]
           for attempt in {1..10}; do
             sleep 1
-            kill -0 "$pid"
+            if ! xcrun simctl spawn "$device" launchctl list | awk -v pid="$pid" '$1 == pid {found=1} END {exit !found}'; then
+              cat "$RUNNER_TEMP"/companion.{err,out} || true
+              find "$HOME/Library/Logs/DiagnosticReports" -iname 'HealthSynki*.ips' -exec head -c 16000 {} \\; || true
+              exit 1
+            fi
           done
