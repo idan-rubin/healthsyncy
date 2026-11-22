@@ -30,17 +30,24 @@ jobs:
           dotnet-version: 11.0.100
       - run: sudo xcode-select --switch /Applications/Xcode_27.2.app/Contents/Developer
       - run: dotnet workload install ios --version 11.0.100.1
-      - run: dotnet build HealthSynki.iOS -c Debug -r iossimulator-arm64 -p:EnableCodeSigning=false -p:CodesignRequireProvisioningProfile=false
+      - run: dotnet build HealthSynki.iOS -c Release -r iossimulator-arm64 -p:EnableCodeSigning=false -p:CodesignRequireProvisioningProfile=false
       - name: Install and launch the iPhone companion
         shell: bash
         run: |
           set -euo pipefail
           device=$(xcrun simctl create HealthSynki-CI com.apple.CoreSimulator.SimDeviceType.iPhone-17 com.apple.CoreSimulator.SimRuntime.iOS-27-2)
           xcrun simctl bootstatus "$device" -b
-          app=$(find HealthSynki.iOS/bin/Debug/net11.0-ios/iossimulator-arm64 -maxdepth 1 -name '*.app' -print -quit)
+          app=$(find HealthSynki.iOS/bin/Release/net11.0-ios/iossimulator-arm64 -maxdepth 1 -name '*.app' -print -quit)
           bundle=$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$app/Info.plist")
           codesign --force --sign - --entitlements HealthSynki.iOS/DeviceEntitlements.plist "$app"
           xcrun simctl install "$device" "$app"
+          report() {
+            cat "$RUNNER_TEMP"/companion.{err,out} 2>/dev/null || true
+            find "$HOME/Library/Logs/DiagnosticReports" -iname '*HealthSynki*.ips' -exec head -c 24000 {} \\; || true
+            xcrun simctl spawn "$device" log show --last 5m --style compact --predicate 'process == "HealthSynki.iOS" OR (eventMessage CONTAINS[c] "org.healthsynki.companion" AND messageType == error)' | tail -70 || true
+          }
+          trap report ERR
+          xcrun simctl launch "$device" com.apple.Preferences
           launch=$(xcrun simctl launch --stdout="$RUNNER_TEMP/companion.out" --stderr="$RUNNER_TEMP/companion.err" "$device" "$bundle")
           echo "$launch"
           pid=${launch##*: }
