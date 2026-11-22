@@ -31,3 +31,24 @@ jobs:
       - run: sudo xcode-select --switch /Applications/Xcode_27.2.app/Contents/Developer
       - run: dotnet workload install ios --version 11.0.100.1
       - run: dotnet build HealthSynki.iOS -c Debug -r iossimulator-arm64 -p:EnableCodeSigning=false -p:CodesignRequireProvisioningProfile=false
+      - name: Install and launch the iPhone companion
+        shell: bash
+        run: |
+          set -euo pipefail
+          device=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          print(next(d["udid"] for runtime in sorted(devices, reverse=True)
+                     if ".iOS-27-" in runtime for d in devices[runtime]
+                     if d["isAvailable"] and d["name"].startswith("iPhone")))')
+          xcrun simctl bootstatus "$device" -b
+          app=$(find HealthSynki.iOS/bin/Debug/net11.0-ios/iossimulator-arm64 -maxdepth 1 -name '*.app' -print -quit)
+          bundle=$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$app/Info.plist")
+          xcrun simctl install "$device" "$app"
+          launch=$(xcrun simctl launch "$device" "$bundle")
+          pid=${launch##*: }
+          [[ "$pid" =~ ^[0-9]+$ ]]
+          for attempt in {1..10}; do
+            sleep 1
+            kill -0 "$pid"
+          done
