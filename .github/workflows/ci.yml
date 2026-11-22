@@ -30,7 +30,7 @@ jobs:
           dotnet-version: 11.0.100
       - run: sudo xcode-select --switch /Applications/Xcode_27.2.app/Contents/Developer
       - run: dotnet workload install ios --version 11.0.100.1
-      - run: dotnet build HealthSynki.iOS -c Release -r iossimulator-arm64 -p:EnableCodeSigning=false -p:CodesignRequireProvisioningProfile=false
+      - run: dotnet build HealthSynki.iOS -c Release -r iossimulator-arm64 -p:EnableCodeSigning=true -p:CodesignKey=- -p:CodesignEntitlements=DeviceEntitlements.plist -p:CodesignRequireProvisioningProfile=false
       - name: Install and launch the iPhone companion
         shell: bash
         run: |
@@ -39,14 +39,23 @@ jobs:
           xcrun simctl bootstatus "$device" -b
           app=$(find HealthSynki.iOS/bin/Release/net11.0-ios/iossimulator-arm64 -maxdepth 1 -name '*.app' -print -quit)
           bundle=$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$app/Info.plist")
-          codesign --force --sign - --entitlements HealthSynki.iOS/DeviceEntitlements.plist "$app"
+          codesign --verify --deep --strict "$app"
           xcrun simctl install "$device" "$app"
           report() {
             cat "$RUNNER_TEMP"/companion.{err,out} 2>/dev/null || true
             find "$HOME/Library/Logs/DiagnosticReports" -iname '*HealthSynki*.ips' -exec head -c 24000 {} + || true
             xcrun simctl spawn "$device" log show --last 5m --style compact --predicate 'process == "HealthSynki.iOS" OR (eventMessage CONTAINS[c] "org.healthsynki.companion" AND messageType == error)' | tail -70 || true
           }
-          trap report ERR
+          diagnose() {
+            report
+            executable=$(/usr/libexec/PlistBuddy -c 'Print CFBundleExecutable' "$app/Info.plist")
+            container=$(xcrun simctl get_app_container "$device" "$bundle" app)
+            file "$container/$executable"
+            otool -L "$container/$executable"
+            ls -la "$container" | head -80
+            xcrun simctl spawn "$device" log show --last 4m --style compact --predicate 'eventMessage CONTAINS[c] "HealthSynki" OR process == "amfid" OR process == "ReportCrash"' | tail -180 || true
+          }
+          trap diagnose ERR
           xcrun simctl launch "$device" com.apple.Preferences
           xcrun simctl launch "$device" "$bundle"
           sleep 10
