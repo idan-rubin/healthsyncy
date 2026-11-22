@@ -30,4 +30,4 @@ jobs:
           dotnet-version: 11.0.100
       - run: sudo xcode-select --switch /Applications/Xcode_27.2.app/Contents/Developer
       - run: dotnet workload install ios --version 11.0.100.1
-      - run: dotnet build HealthSynki.iOS -c Debug -r iossimulator-arm64
+      - run: dotnet build HealthSynki.iOS -c Debug -r iossimulator-arm64 -p:EnableCodeSigning=false -p:CodesignRequireProvisioningProfile=false

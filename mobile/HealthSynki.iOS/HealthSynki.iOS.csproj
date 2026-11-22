@@ -7,7 +7,7 @@
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
     <SupportedOSPlatformVersion>18.0</SupportedOSPlatformVersion>
-    <CodesignEntitlements Condition="'$(RuntimeIdentifier)' != 'iossimulator-arm64' and '$(RuntimeIdentifier)' != 'iossimulator-x64'">Entitlements.plist</CodesignEntitlements>
+    <CodesignEntitlements Condition="'$(RuntimeIdentifier)' != 'iossimulator-arm64' and '$(RuntimeIdentifier)' != 'iossimulator-x64'">DeviceEntitlements.plist</CodesignEntitlements>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../src/Libraries/HealthSynki.Core/ActivityData.cs" Link="ActivityData.cs" />
