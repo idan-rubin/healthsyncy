@@ -35,7 +35,7 @@ python3 checks/manifests.py
 
 The storage checks cover conflicting concurrent updates, replays, corrections, missing days, and settings. The HTTP suite starts the three services and a temporary loopback-only OAuth issuer. It checks writes, OAuth scope, owner, expiration, audience, MCP discovery and tool calls. It uses generated keys and synthetic metrics. The iOS build runs separately on macOS.
 
-## Deploy on Hetzner
+## Deploy to Kubernetes
 
 The scripts target an existing K3s cluster with Traefik, an enforcing NetworkPolicy implementation, a default persistent-volume storage class, `kubectl` access and public HTTPS. Choose a base domain and point `sync`, `connector`, and `admin` under that domain at the ingress. The installer creates private MongoDB networking and one persistent volume each for MongoDB and the admin cookie keys. Set up encrypted storage, Kubernetes secret encryption, and encrypted backups appropriate to your host. The supplied MongoDB deployment is single-instance and uses plain TCP on the restricted cluster network.
 
