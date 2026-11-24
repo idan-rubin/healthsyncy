@@ -1,6 +1,6 @@
-# HealthSynki
+# HealthSyncy
 
-Ask “How many steps did I take today?” or “How did my activity change this week?” HealthSynki reads daily activity totals on your iPhone and lets an authorized MCP client query them on your own server. The companion can also share today’s totals as plain text through the iOS share sheet before you set up a server.
+Ask “How many steps did I take today?” or “How did my activity change this week?” HealthSyncy reads daily activity totals on your iPhone and lets an authorized MCP client query them on your own server. The companion can also share today’s totals as plain text through the iOS share sheet before you set up a server.
 
 This is a single-person, single-iPhone implementation. Each person runs their own instance. It uses C# and .NET 11, ASP.NET Core, the official MCP C# SDK, and MongoDB. The software is licensed under MIT. MongoDB Community Server has its own [SSPL license](https://www.mongodb.com/legal/licensing/server-side-public-license).
 
@@ -44,7 +44,7 @@ The scripts target an existing K3s cluster with Traefik, an enforcing NetworkPol
 3. Set `DEVICE_TOKEN_FILE` to a new path in a private directory outside the checkout. Run `scripts/bootstrap.sh` once with Bash 4 or newer. It generates the device token, MongoDB credentials and separate Kubernetes Secrets in the `healthsynki` namespace. The sibling `.bootstrap.json` is a sensitive recovery copy containing credentials. Move both files into protected storage. If initial Secret creation is interrupted, finish creating just the missing objects from that backup with the original credential values.
 4. Provision a TLS certificate covering all three hosts as the namespace Secret `healthsynki-tls`. Use your current certificate automation or `kubectl -n healthsynki create secret tls healthsynki-tls --cert=chain.pem --key=key.pem`. The cluster must be able to pull the service images. For GHCR, grant public read access to all three packages or configure the namespace’s registry pull credentials.
 5. A push to `main` runs CI and publishes three commit-tagged GHCR images for amd64 and arm64. In GitHub, add a `production` environment, the variable `HEALTHSYNKI_DOMAIN`, and a secret `KUBECONFIG_B64` containing a base64-encoded deployment kubeconfig with access scoped to this namespace. The runner must be able to reach the Kubernetes API. Run **CI/CD** on `main` with **deploy** selected. The job applies the manifests and waits for all four rollouts. New pushes by themselves publish images.
-6. To deploy directly, export `IMAGE_PREFIX=ghcr.io/<owner>/<repository>` and `IMAGE_TAG` as the published 40-character commit SHA, then run `scripts/deploy.sh`. Using a previous published SHA redeploys that version. You can inspect all manifests offline with `python3 scripts/render.py --domain example.org --registry ghcr.io/example/healthsynki --tag <full-sha> --output /tmp/healthsynki-manifests`.
+6. To deploy directly, export `IMAGE_PREFIX=ghcr.io/<owner>/<repository>` and `IMAGE_TAG` as the published 40-character commit SHA, then run `scripts/deploy.sh`. Using a previous published SHA redeploys that version. You can inspect all manifests offline with `python3 scripts/render.py --domain example.org --registry ghcr.io/example/healthsyncy --tag <full-sha> --output /tmp/healthsynki-manifests`.
 
 ### Connect the phone
 
