@@ -7,7 +7,7 @@ import plistlib
 
 root = Path(__file__).resolve().parents[1]
 with tempfile.TemporaryDirectory() as d:
-    render = ["python3", str(root/"scripts/render.py"), "--domain","example.org","--registry","ghcr.io/example/healthsynki","--tag","a"*40,"--output",d]
+    render = ["python3", str(root/"scripts/render.py"), "--domain","example.org","--registry","ghcr.io/example/healthsyncy","--tag","a"*40,"--output",d]
     subprocess.run(render, check=True)
     resources = [json.loads(x) for x in (Path(d)/"resources.yaml").read_text().split("\n---\n")]
     services = [r for r in resources if r["kind"]=="Service"]
@@ -16,11 +16,11 @@ with tempfile.TemporaryDirectory() as d:
     ingress = next(r for r in resources if r["kind"]=="Ingress")["spec"]
     assert all(rule["host"] != "mongo.example.org" for rule in ingress["rules"])
     assert set(ingress["tls"][0]["hosts"])=={r["host"] for r in ingress["rules"]}
-    assert all(r["metadata"]["namespace"]=="healthsynki" for r in resources)
+    assert all(r["metadata"]["namespace"]=="healthsyncy" for r in resources)
     assert all("storageClassName" not in r["spec"] for r in resources if r["kind"] == "PersistentVolumeClaim")
     subprocess.run([*render, "--shared-node"], check=True)
     shared = [json.loads(x) for x in (Path(d)/"resources.yaml").read_text().split("\n---\n")]
-    assert all(r["metadata"]["namespace"] == "healthsynki" for r in shared)
+    assert all(r["metadata"]["namespace"] == "healthsyncy" for r in shared)
     policies = {r["metadata"]["name"]: r["spec"] for r in shared if r["kind"] == "NetworkPolicy"}
     assert policies["default-deny"] == {"podSelector": {}, "policyTypes": ["Ingress", "Egress"]}
     ingress_peers = policies["app-traffic"]["ingress"][0]["from"]
@@ -43,7 +43,7 @@ with tempfile.TemporaryDirectory() as d:
 for p in root.glob("**/*.csproj"):
     for ref in ET.parse(p).iter("ProjectReference"):
         assert (p.parent/ref.attrib["Include"]).is_file()
-for p in ET.parse(root/"HealthSynki.slnx").iter("Project"):
+for p in ET.parse(root/"HealthSyncy.slnx").iter("Project"):
     assert (root/p.attrib["Path"]).is_file()
 for p in root.glob("mobile/**/*.plist"):
     plistlib.loads(p.read_bytes())

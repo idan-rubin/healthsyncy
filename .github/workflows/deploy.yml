@@ -48,11 +48,11 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && inputs.deploy && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
-    concurrency: healthsynki-production
+    concurrency: healthsyncy-production
     env:
       KUBECONFIG_B64: ${{ secrets.KUBECONFIG_B64 }}
-      HEALTHSYNKI_DOMAIN: ${{ vars.HEALTHSYNKI_DOMAIN }}
-      HEALTHSYNKI_DEPLOYMENT_PROFILE: ${{ vars.HEALTHSYNKI_DEPLOYMENT_PROFILE }}
+      HEALTHSYNCY_DOMAIN: ${{ vars.HEALTHSYNCY_DOMAIN }}
+      HEALTHSYNCY_DEPLOYMENT_PROFILE: ${{ vars.HEALTHSYNCY_DEPLOYMENT_PROFILE }}
       IMAGE_PREFIX: ghcr.io/${{ github.repository }}
       IMAGE_TAG: ${{ github.sha }}
     steps:
@@ -63,7 +63,7 @@ jobs:
         run: |
           set -euo pipefail
           umask 077
-          export KUBECONFIG="$RUNNER_TEMP/healthsynki-kubeconfig"
+          export KUBECONFIG="$RUNNER_TEMP/healthsyncy-kubeconfig"
           trap 'rm -f "$KUBECONFIG"' EXIT
           printf %s "$KUBECONFIG_B64" | base64 -d > "$KUBECONFIG"
           scripts/deploy.sh

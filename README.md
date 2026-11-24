@@ -13,7 +13,7 @@ This is a single-person, single-iPhone implementation. Each person runs their ow
 | Connector | Answers daily and seven-day queries through MCP and exposes a daily REST endpoint | Reads snapshots only |
 | Admin | Displays activity, capture and receipt times, freshness alerts, and a seven-day history. Lets the owner pause uploads and set the alert threshold | Reads snapshots and manages settings |
 
-The three services live in `src/Services/HealthSynki.*/HealthSynki.*.EntryPoint`. The HTTP APIs use versioned attribute-routed controllers with constructor injection. The shared contracts and storage code live in `src/Libraries/HealthSynki.Core`. The iOS project links the contract source and uses native HealthKit and UIKit bindings. Each service connects directly to MongoDB.
+The three services live in `src/Services/HealthSyncy.*/HealthSyncy.*.EntryPoint`. The HTTP APIs use versioned attribute-routed controllers with constructor injection. The shared contracts and storage code live in `src/Libraries/HealthSyncy.Core`. The iOS project links the contract source and uses native HealthKit and UIKit bindings. Each service connects directly to MongoDB.
 
 ### What gets synced
 
@@ -28,7 +28,7 @@ Each refresh covers today and the preceding six days in the phone’s current ti
 Use a .NET 11 SDK, Docker, Bash 4 or newer, OpenSSL, Python 3 and curl. Run these commands from the repository root. The integration suite starts an authenticated, disposable MongoDB 8 container bound to loopback, loads the production role definitions, and removes the container on exit.
 
 ```sh
-dotnet build HealthSynki.slnx -c Release
+dotnet build HealthSyncy.slnx -c Release
 checks/mongo.sh
 python3 checks/manifests.py
 ```
@@ -40,15 +40,15 @@ The storage checks cover conflicting concurrent updates, replays, corrections, m
 The scripts target an existing K3s cluster with Traefik, an enforcing NetworkPolicy implementation, a default persistent-volume storage class, `kubectl` access and public HTTPS. Choose a base domain and point `sync`, `connector`, and `admin` under that domain at the ingress. The installer creates private MongoDB networking and one persistent volume each for MongoDB and the admin cookie keys. Set up encrypted storage, Kubernetes secret encryption, and encrypted backups appropriate to your host. The supplied MongoDB deployment is single-instance and uses plain TCP on the restricted cluster network.
 
 1. Configure an HTTPS OIDC provider you control. Register an admin web client with authorization code flow, PKCE and redirect URI `https://admin.<domain>/signin-oidc`. Register a separate OAuth client for ChatGPT with authorization code flow, PKCE S256, and the callback URL shown in your ChatGPT app setup. Configure the provider to accept the MCP resource parameter and issue signed JWT access tokens with audience `https://connector.<domain>/mcp`, the owner’s subject and the `activity.read` scope. The issuer URL must match its discovery document exactly. The connector uses issuer discovery and JWKS. Opaque access tokens will fail.
-2. Export `HEALTHSYNKI_DOMAIN`, `OAUTH_ISSUER`, `OWNER_SUBJECT`, `ADMIN_SUBJECT`, `ADMIN_CLIENT_ID`, and `ADMIN_CLIENT_SECRET` from your secret manager. The two subjects are the exact `sub` claims for your account in the respective clients. Set `REPORTING_ZONE` to the phone’s IANA zone so Admin shows the same days. Its default is UTC.
-3. Set `DEVICE_TOKEN_FILE` to a new path in a private directory outside the checkout. Run `scripts/bootstrap.sh` once with Bash 4 or newer. It generates the device token, MongoDB credentials and separate Kubernetes Secrets in the `healthsynki` namespace. The sibling `.bootstrap.json` is a sensitive recovery copy containing credentials. Move both files into protected storage. If initial Secret creation is interrupted, finish creating just the missing objects from that backup with the original credential values.
-4. Provision a TLS certificate covering all three hosts as the namespace Secret `healthsynki-tls`. Use your current certificate automation or `kubectl -n healthsynki create secret tls healthsynki-tls --cert=chain.pem --key=key.pem`. The cluster must be able to pull the service images. For GHCR, grant public read access to all three packages or configure the namespace’s registry pull credentials.
-5. A push to `main` runs CI and publishes three commit-tagged GHCR images for amd64 and arm64. In GitHub, add a `production` environment, the variable `HEALTHSYNKI_DOMAIN`, and a secret `KUBECONFIG_B64` containing a base64-encoded deployment kubeconfig with access scoped to this namespace. The runner must be able to reach the Kubernetes API. Run **CI/CD** on `main` with **deploy** selected. The job applies the manifests and waits for all four rollouts. New pushes by themselves publish images.
-6. To deploy directly, export `IMAGE_PREFIX=ghcr.io/<owner>/<repository>` and `IMAGE_TAG` as the published 40-character commit SHA, then run `scripts/deploy.sh`. Using a previous published SHA redeploys that version. You can inspect all manifests offline with `python3 scripts/render.py --domain example.org --registry ghcr.io/example/healthsyncy --tag <full-sha> --output /tmp/healthsynki-manifests`.
+2. Export `HEALTHSYNCY_DOMAIN`, `OAUTH_ISSUER`, `OWNER_SUBJECT`, `ADMIN_SUBJECT`, `ADMIN_CLIENT_ID`, and `ADMIN_CLIENT_SECRET` from your secret manager. The two subjects are the exact `sub` claims for your account in the respective clients. Set `REPORTING_ZONE` to the phone’s IANA zone so Admin shows the same days. Its default is UTC.
+3. Set `DEVICE_TOKEN_FILE` to a new path in a private directory outside the checkout. Run `scripts/bootstrap.sh` once with Bash 4 or newer. It generates the device token, MongoDB credentials and separate Kubernetes Secrets in the `healthsyncy` namespace. The sibling `.bootstrap.json` is a sensitive recovery copy containing credentials. Move both files into protected storage. If initial Secret creation is interrupted, finish creating just the missing objects from that backup with the original credential values.
+4. Provision a TLS certificate covering all three hosts as the namespace Secret `healthsyncy-tls`. Use your current certificate automation or `kubectl -n healthsyncy create secret tls healthsyncy-tls --cert=chain.pem --key=key.pem`. The cluster must be able to pull the service images. For GHCR, grant public read access to all three packages or configure the namespace’s registry pull credentials.
+5. A push to `main` runs CI and publishes three commit-tagged GHCR images for amd64 and arm64. In GitHub, add a `production` environment, the variable `HEALTHSYNCY_DOMAIN`, and a secret `KUBECONFIG_B64` containing a base64-encoded deployment kubeconfig with access scoped to this namespace. The runner must be able to reach the Kubernetes API. Run **CI/CD** on `main` with **deploy** selected. The job applies the manifests and waits for all four rollouts. New pushes by themselves publish images.
+6. To deploy directly, export `IMAGE_PREFIX=ghcr.io/<owner>/<repository>` and `IMAGE_TAG` as the published 40-character commit SHA, then run `scripts/deploy.sh`. Using a previous published SHA redeploys that version. You can inspect all manifests offline with `python3 scripts/render.py --domain example.org --registry ghcr.io/example/healthsyncy --tag <full-sha> --output /tmp/healthsyncy-manifests`.
 
 ### Share an existing K3s node
 
-For a fresh install on an existing node, set the production environment variable `HEALTHSYNKI_DEPLOYMENT_PROFILE` to `shared-node`. Set the same shell variable for a manual deployment. To inspect the generated manifests, pass `--shared-node` to `scripts/render.py`.
+For a fresh install on an existing node, set the production environment variable `HEALTHSYNCY_DEPLOYMENT_PROFILE` to `shared-node`. Set the same shell variable for a manual deployment. To inspect the generated manifests, pass `--shared-node` to `scripts/render.py`.
 
 The profile uses the node's existing `local-path` storage and Traefik ingress. The deployment identity needs read access to the single StorageClass named `local-path` to verify its provisioner. The four containers request 300 millicores and 896 MiB in total. During rolling updates the namespace can use up to 2 CPU cores and 2,304 MiB. The two claims request 8 GiB and 64 MiB on the node. Check free disk space on the backing filesystem and monitor it as usage grows. Local Path Provisioner does not enforce a filesystem size limit.
 
@@ -62,8 +62,8 @@ On a Mac, install the .NET 11 iOS workload and its matching Xcode release. CI us
 cd mobile
 export DEVELOPER_DIR=/Applications/Xcode_27.2.app/Contents/Developer
 dotnet workload install ios --version 11.0.100.1
-dotnet build HealthSynki.iOS/HealthSynki.iOS.csproj -c Debug -r iossimulator-arm64
-dotnet build HealthSynki.iOS/HealthSynki.iOS.csproj -c Debug -r ios-arm64 -t:Run \
+dotnet build HealthSyncy.iOS/HealthSyncy.iOS.csproj -c Debug -r iossimulator-arm64
+dotnet build HealthSyncy.iOS/HealthSyncy.iOS.csproj -c Debug -r ios-arm64 -t:Run \
   -p:ApplicationId="your.bundle.id" -p:CodesignKey="<your signing identity>" \
   -p:CodesignProvision="<your provisioning profile>"
 ```

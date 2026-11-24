@@ -25,7 +25,7 @@ for role in Sync Connector Admin; do
     urls+=";https://127.0.0.1:5513"
     export Kestrel__Certificates__Default__Path="$work/issuer.crt" Kestrel__Certificates__Default__KeyPath="$work/issuer.key"
   fi
-  MongoUri="${!role_uri:-$MongoUri}" ASPNETCORE_URLS="$urls" dotnet "src/Services/HealthSynki.$role/HealthSynki.$role.EntryPoint/bin/Release/net11.0/HealthSynki.$role.EntryPoint.dll" >"$work/$role.log" 2>&1 &
+  MongoUri="${!role_uri:-$MongoUri}" ASPNETCORE_URLS="$urls" dotnet "src/Services/HealthSyncy.$role/HealthSyncy.$role.EntryPoint/bin/Release/net11.0/HealthSyncy.$role.EntryPoint.dll" >"$work/$role.log" 2>&1 &
   pids+=("$!")
   for i in {1..50}; do curl -fsS "http://127.0.0.1:$port/readyz" >/dev/null 2>&1 && break; sleep 1; done
   curl -fsS "http://127.0.0.1:$port/readyz" || { cat "$work/$role.log"; exit 1; }

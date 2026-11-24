@@ -7,7 +7,7 @@ from pathlib import Path
 
 roles = ("sync", "connector", "admin")
 ports = {"sync": 8080, "connector": 8080, "admin": 8080, "mongo": 27017}
-namespace = "healthsynki"
+namespace = "healthsyncy"
 root = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser()
 parser.add_argument("--domain", required=True)
@@ -106,7 +106,7 @@ for role in (*roles, "mongo"):
             securityContext={"allowPrivilegeEscalation":False,"capabilities":{"drop":["ALL"]}})
         pod["securityContext"]={"runAsNonRoot":True,"runAsUser":1654,"fsGroup":1654,"seccompProfile":{"type":"RuntimeDefault"}}
         if role == "admin":
-            container["volumeMounts"]=[dict(name="keys",mountPath="/var/lib/healthsynki/keys")]
+            container["volumeMounts"]=[dict(name="keys",mountPath="/var/lib/healthsyncy/keys")]
             pod["volumes"]=[dict(name="keys",persistentVolumeClaim={"claimName":"admin-keys"})]
     add("Deployment",role,"apps/v1",spec=dict(replicas=1, strategy={"type":"Recreate"} if role in ("mongo","admin")
         else {"type":"RollingUpdate"},selector={"matchLabels":labels},template={"metadata":{"labels":labels},"spec":pod}))
@@ -118,8 +118,8 @@ add("NetworkPolicy","mongo-private","networking.k8s.io/v1",spec={
 hosts = {r:f"{r}.{args.domain}" for r in roles}
 routes = {"sync":[("/api/v1/days", "Prefix")], "connector":[("/api/v1/activity","Prefix"),("/mcp","Exact"),("/.well-known/oauth-protected-resource/mcp","Exact")],
           "admin":[("/","Prefix")]}
-add("Ingress","healthsynki","networking.k8s.io/v1",spec={"ingressClassName":"traefik",
-    "tls":[{"hosts":list(hosts.values()),"secretName":"healthsynki-tls"}],"rules":[
+add("Ingress","healthsyncy","networking.k8s.io/v1",spec={"ingressClassName":"traefik",
+    "tls":[{"hosts":list(hosts.values()),"secretName":"healthsyncy-tls"}],"rules":[
     {"host":hosts[r],"http":{"paths":[{"path":path,"pathType":kind,"backend":{"service":{"name":r,"port":{"number":8080}}}}
         for path,kind in routes[r]]}} for r in roles]})
 items[-1]["metadata"]["annotations"]={"traefik.ingress.kubernetes.io/router.entrypoints":"websecure",

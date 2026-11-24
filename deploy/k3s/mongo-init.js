@@ -7,7 +7,7 @@ const access = {
   admin: {days: ["find"], settings: ["find", "insert", "update"]}
 };
 for (const [name, collections] of Object.entries(access)) {
-  const role = "healthsynki_" + name;
+  const role = "healthsyncy_" + name;
   const privileges = Object.entries(collections).map(([collection, actions]) => ({
     resource: {db: "activity", collection}, actions
   }));
