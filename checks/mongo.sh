@@ -5,7 +5,7 @@ export MONGO_INITDB_ROOT_PASSWORD=$(openssl rand -hex 24)
 export MONGO_SYNC=$(openssl rand -hex 24) MONGO_CONNECTOR=$(openssl rand -hex 24) MONGO_ADMIN=$(openssl rand -hex 24)
 container=$(docker run --detach --publish 127.0.0.1::27017 --env MONGO_SYNC --env MONGO_CONNECTOR --env MONGO_ADMIN \
   --env MONGO_INITDB_ROOT_USERNAME --env MONGO_INITDB_ROOT_PASSWORD \
-  --volume "$PWD/deploy/k3s/mongo-init.js:/docker-entrypoint-initdb.d/healthsynki.js:ro" mongo:8.0)
+  --volume "$PWD/deploy/k3s/mongo-init.js:/docker-entrypoint-initdb.d/healthsyncy.js:ro" mongo:8.0)
 trap 'docker rm -f "$container" >/dev/null' EXIT
 port=$(docker port "$container" 27017/tcp | cut -d: -f2)
 export TEST_MONGO_URI="mongodb://fixture:$MONGO_INITDB_ROOT_PASSWORD@127.0.0.1:$port/?authSource=admin"
@@ -27,5 +27,5 @@ docker exec "$container" mongosh --quiet --host 127.0.0.1 --username connector -
       try { code = a.runCommand(command).code; } catch (e) { code = e.code; }
       if (code !== 13) throw Error("Expected unauthorized Mongo operation");
     }'
-dotnet run --project checks/HealthSynki.Checks -c Release
+dotnet run --project checks/HealthSyncy.Checks -c Release
 checks/http.sh

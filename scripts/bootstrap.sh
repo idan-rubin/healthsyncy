@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 umask 077
-: "${HEALTHSYNKI_DOMAIN:?}" "${OAUTH_ISSUER:?}" "${OWNER_SUBJECT:?}" "${ADMIN_SUBJECT:?}" "${ADMIN_CLIENT_ID:?}" "${ADMIN_CLIENT_SECRET:?}"
+: "${HEALTHSYNCY_DOMAIN:?}" "${OAUTH_ISSUER:?}" "${OWNER_SUBJECT:?}" "${ADMIN_SUBJECT:?}" "${ADMIN_CLIENT_ID:?}" "${ADMIN_CLIENT_SECRET:?}"
 : "${DEVICE_TOKEN_FILE:?Choose a private path for the generated iPhone token}"
 bundle="$DEVICE_TOKEN_FILE.bootstrap.json"
 [[ ! -e "$DEVICE_TOKEN_FILE" && ! -e "$bundle" ]] || { echo "Device token or bootstrap backup already exists." >&2; exit 1; }
 dir=$(mktemp -d)
 trap 'rm -rf "$dir"' EXIT
-kubectl create namespace healthsynki --dry-run=client -o yaml | kubectl apply -f -
-k=(kubectl -n healthsynki)
+kubectl create namespace healthsyncy --dry-run=client -o yaml | kubectl apply -f -
+k=(kubectl -n healthsyncy)
 for name in mongo-init-secrets sync-config connector-config admin-config; do
   existing=$("${k[@]}" get secret "$name" --ignore-not-found -o name)
   [[ -z "$existing" ]] || { echo "Existing secrets found. This is a first-install command." >&2; exit 1; }
@@ -27,10 +27,10 @@ device=$(openssl rand -hex 32)
 put sync-config UploadTokenSha256 "$(printf '%s' "$device" | openssl dgst -sha256 -r | cut -d' ' -f1)"
 put connector-config OAuthIssuer "$OAUTH_ISSUER"
 put connector-config OwnerSubject "$OWNER_SUBJECT"
-put connector-config McpResource "https://connector.$HEALTHSYNKI_DOMAIN/mcp"
+put connector-config McpResource "https://connector.$HEALTHSYNCY_DOMAIN/mcp"
 put admin-config OAuthIssuer "$OAUTH_ISSUER"
 put admin-config AdminSubject "$ADMIN_SUBJECT"
-put admin-config AdminOrigin "https://admin.$HEALTHSYNKI_DOMAIN"
+put admin-config AdminOrigin "https://admin.$HEALTHSYNCY_DOMAIN"
 put admin-config AdminClientId "$ADMIN_CLIENT_ID"
 put admin-config AdminClientSecret "$ADMIN_CLIENT_SECRET"
 put admin-config ReportingZone "${REPORTING_ZONE:-UTC}"

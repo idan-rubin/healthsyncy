@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net11.0-ios</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <ApplicationTitle>HealthSyncy</ApplicationTitle>
+    <ApplicationId Condition="'$(ApplicationId)' == ''">org.healthsyncy.companion</ApplicationId>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+    <SupportedOSPlatformVersion>18.0</SupportedOSPlatformVersion>
+    <CodesignEntitlements Condition="'$(RuntimeIdentifier)' != 'iossimulator-arm64' and '$(RuntimeIdentifier)' != 'iossimulator-x64'">DeviceEntitlements.plist</CodesignEntitlements>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/Libraries/HealthSyncy.Core/BackgroundRegistration.cs" Link="BackgroundRegistration.cs" />
+    <Compile Include="../../src/Libraries/HealthSyncy.Core/ActivityData.cs" Link="ActivityData.cs" />
+  </ItemGroup>
+</Project>
