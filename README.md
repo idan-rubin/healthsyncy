@@ -46,6 +46,14 @@ The scripts target an existing K3s cluster with Traefik, an enforcing NetworkPol
 5. A push to `main` runs CI and publishes three commit-tagged GHCR images for amd64 and arm64. In GitHub, add a `production` environment, the variable `HEALTHSYNKI_DOMAIN`, and a secret `KUBECONFIG_B64` containing a base64-encoded deployment kubeconfig with access scoped to this namespace. The runner must be able to reach the Kubernetes API. Run **CI/CD** on `main` with **deploy** selected. The job applies the manifests and waits for all four rollouts. New pushes by themselves publish images.
 6. To deploy directly, export `IMAGE_PREFIX=ghcr.io/<owner>/<repository>` and `IMAGE_TAG` as the published 40-character commit SHA, then run `scripts/deploy.sh`. Using a previous published SHA redeploys that version. You can inspect all manifests offline with `python3 scripts/render.py --domain example.org --registry ghcr.io/example/healthsyncy --tag <full-sha> --output /tmp/healthsynki-manifests`.
 
+### Share an existing K3s node
+
+For a fresh install on an existing node, set the production environment variable `HEALTHSYNKI_DEPLOYMENT_PROFILE` to `shared-node`. Set the same shell variable for a manual deployment. To inspect the generated manifests, pass `--shared-node` to `scripts/render.py`.
+
+The profile uses the node's existing `local-path` storage and Traefik ingress. The deployment identity needs read access to the single StorageClass named `local-path` to verify its provisioner. The four containers request 300 millicores and 896 MiB in total. During rolling updates the namespace can use up to 2 CPU cores and 2,304 MiB. The two claims request 8 GiB and 64 MiB on the node. Check free disk space on the backing filesystem and monitor it as usage grows. Local Path Provisioner does not enforce a filesystem size limit.
+
+The profile denies pod traffic by default. It admits application traffic from the standard K3s Traefik pods in `kube-system` and allows the three applications to reach their private MongoDB. The apps use standard K3s CoreDNS. Admin and Connector also need a publicly reachable HTTPS OAuth issuer. Verify the cluster enforces NetworkPolicy and that an ordinary pod in another namespace cannot connect directly to the database or app ports before sending personal data. The host and cluster administrators retain access. Restoring after loss of the node requires an independent backup.
+
 ### Connect the phone
 
 On a Mac, install the .NET 11 iOS workload and its matching Xcode release. CI uses SDK 11.0.100, workload set 11.0.100.1 and Xcode 27.2. Configure an Apple signing identity, bundle ID and provisioning profile for your device with the HealthKit and background delivery capabilities. The app targets iPhone, iOS 18 or later. Replace the example bundle ID for a signed device build. [Microsoft’s Xcode requirements](https://learn.microsoft.com/en-us/dotnet/ios/troubleshooting/xcode-requirement).
