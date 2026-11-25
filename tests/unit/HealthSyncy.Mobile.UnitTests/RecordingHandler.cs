@@ -2,7 +2,7 @@ using System.Net;
 
 namespace HealthSyncy.Mobile.UnitTests;
 
-internal sealed class RecordingHandler(HttpStatusCode status) : HttpMessageHandler
+internal sealed class RecordingHandler(HttpStatusCode status, string? reply = null) : HttpMessageHandler
 {
     public HttpMethod? Method { get; private set; }
 
@@ -22,6 +22,6 @@ internal sealed class RecordingHandler(HttpStatusCode status) : HttpMessageHandl
         Authorization = request.Headers.Authorization?.ToString();
         ContentType = request.Content?.Headers.ContentType?.ToString();
         Body = request.Content is { } content ? await content.ReadAsStringAsync(cancellationToken) : null;
-        return new(status);
+        return new(status) { Content = reply is null ? null : new StringContent(reply) };
     }
 }

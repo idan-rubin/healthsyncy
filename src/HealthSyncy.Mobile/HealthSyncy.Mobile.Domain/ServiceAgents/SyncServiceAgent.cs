@@ -17,9 +17,17 @@ internal sealed class SyncServiceAgent(HttpClient http) : ISyncServiceAgent
             Headers = { Authorization = new AuthenticationHeaderValue("Bearer", pairing.Token) }
         };
         using var response = await http.SendAsync(message);
-        if (response.StatusCode == HttpStatusCode.Locked)
-            throw new SyncException("Uploads are paused in Admin.");
         if (!response.IsSuccessStatusCode)
-            throw new SyncException($"Upload failed (HTTP {(int)response.StatusCode}).");
+            throw new SyncException(await ExplainAsync(response));
     }
+
+    private static async Task<string> ExplainAsync(HttpResponseMessage response) => response.StatusCode switch
+    {
+        HttpStatusCode.Locked => "Uploads are paused in Admin.",
+        HttpStatusCode.Unauthorized =>
+            "The sync server did not accept the device token. Pair again with the current token.",
+        var status when (int)status is >= 400 and < 500 && response.Content.Headers.ContentType?.MediaType is "text/plain" =>
+            $"The sync server rejected the upload: {(await response.Content.ReadAsStringAsync()).Trim()}",
+        var status => string.Create(CultureInfo.InvariantCulture, $"Upload failed (HTTP {(int)status}).")
+    };
 }

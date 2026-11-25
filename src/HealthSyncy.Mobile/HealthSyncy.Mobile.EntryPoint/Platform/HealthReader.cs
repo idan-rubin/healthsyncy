@@ -1,3 +1,4 @@
+using System.Globalization;
 using HealthKit;
 using HealthSyncy.Common.Contracts;
 using HealthSyncy.Mobile.Domain;
@@ -56,9 +57,9 @@ internal sealed class HealthReader : IHealthReader
 
     public async Task<DailyTotals> ReadAsync(DateOnly day, TimeZoneInfo zone)
     {
-        using var start = Midnight(day, zone);
-        using var end = Midnight(day.AddDays(1), zone);
-        using var range = HKQuery.GetPredicateForSamples(start, end, HKQueryOptions.None);
+        var start = Midnight(day, zone);
+        var end = Midnight(day.AddDays(1), zone);
+        var range = HKQuery.GetPredicateForSamples(start, end, HKQueryOptions.None);
         var stepsTask = TotalAsync(_steps, HKUnit.Count, start, range);
         var restingTask = TotalAsync(_resting, HKUnit.Kilocalorie, start, range);
         var energyTask = TotalAsync(_energy, HKUnit.Kilocalorie, start, range);
@@ -89,7 +90,7 @@ internal sealed class HealthReader : IHealthReader
             if (error is null)
                 await onChange();
             else
-                report($"HealthKit could not deliver {metric} ({error.Code}).");
+                report(string.Create(CultureInfo.InvariantCulture, $"HealthKit could not deliver {metric} ({error.Code})."));
         }
         catch (Exception failure)
         {
@@ -111,12 +112,21 @@ internal sealed class HealthReader : IHealthReader
 
     private static void Complete<T>(TaskCompletionSource<T> done, NSError? error, Func<T> read)
     {
-        if (error is null)
+        if (error is not null)
+        {
+            _ = error.Domain is "com.apple.healthkit" && error.Code == (long)HKErrorCode.NoData
+                ? done.TrySetResult(default!)
+                : done.TrySetException(new SyncException("Health data is unavailable. Unlock the phone and retry."));
+            return;
+        }
+        try
+        {
             _ = done.TrySetResult(read());
-        else if (error.Domain is "com.apple.healthkit" && error.Code == (long)HKErrorCode.NoData)
-            _ = done.TrySetResult(default!);
-        else
-            _ = done.TrySetException(new SyncException("Health data is unavailable. Unlock the phone and retry."));
+        }
+        catch (Exception failure)
+        {
+            _ = done.TrySetException(failure);
+        }
     }
 
     private async Task<decimal?> TotalAsync(HKQuantityType type, HKUnit unit, NSDate start, NSPredicate range)

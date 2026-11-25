@@ -27,7 +27,7 @@ jobs:
     timeout-minutes: 35
     defaults:
       run:
-        working-directory: src/HealthSyncy.Mobile
+        working-directory: src/HealthSyncy.Mobile/HealthSyncy.Mobile.EntryPoint
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v6
@@ -36,16 +36,16 @@ jobs:
       - run: sudo xcode-select --switch /Applications/Xcode_27.2.app/Contents/Developer
       - run: dotnet workload install ios --version 11.0.100.1
       - name: Enable strict analyzer rules
-        run: cp ../../.editorconfig.ci ../../.editorconfig
-      - run: dotnet build HealthSyncy.Mobile.EntryPoint -c Release -r iossimulator-arm64 -p:EnableCodeSigning=true -p:CodesignKey=- -p:CodesignEntitlements=DeviceEntitlements.plist -p:CodesignRequireProvisioningProfile=false
-      - run: dotnet format HealthSyncy.Mobile.EntryPoint --verify-no-changes
+        run: cp ../../../.editorconfig.ci ../../../.editorconfig
+      - run: dotnet build -c Release -r iossimulator-arm64 -p:EnableCodeSigning=true -p:CodesignKey=- -p:CodesignEntitlements=DeviceEntitlements.plist -p:CodesignRequireProvisioningProfile=false
+      - run: dotnet format --verify-no-changes
       - name: Install and launch the iPhone companion
         shell: bash
         run: |
           set -euo pipefail
           device=$(xcrun simctl create HealthSyncy-CI com.apple.CoreSimulator.SimDeviceType.iPhone-17 com.apple.CoreSimulator.SimRuntime.iOS-27-2)
           xcrun simctl bootstatus "$device" -b
-          app=$(find HealthSyncy.Mobile.EntryPoint/bin/Release/net11.0-ios/iossimulator-arm64 -maxdepth 1 -name '*.app' -print -quit)
+          app=$(find bin/Release/net11.0-ios/iossimulator-arm64 -maxdepth 1 -name '*.app' -print -quit)
           bundle=$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$app/Info.plist")
           codesign --verify --deep --strict "$app"
           xcrun simctl install "$device" "$app"

@@ -1,3 +1,4 @@
+using System.Globalization;
 using HealthSyncy.Mobile.Domain;
 using HealthSyncy.Mobile.Domain.Pairings;
 using HealthSyncy.Mobile.Domain.Services;
@@ -19,7 +20,7 @@ public sealed class AppDelegate : UIApplicationDelegate
 
     private readonly UITextField _host = new()
     {
-        Placeholder = "HTTPS sync server",
+        Placeholder = "Sync server address",
         BorderStyle = UITextBorderStyle.RoundedRect,
         AutocapitalizationType = UITextAutocapitalizationType.None,
         AutocorrectionType = UITextAutocorrectionType.No
@@ -142,7 +143,7 @@ public sealed class AppDelegate : UIApplicationDelegate
         _status.Text = days == 0 ? "No readable activity yet." : "";
         if (days == 0)
             return;
-        var message = $"Last upload: {DateTimeOffset.Now:g} ({days} days).";
+        var message = string.Create(CultureInfo.CurrentCulture, $"Last upload: {DateTimeOffset.Now:g} ({days} days).");
         NSUserDefaults.StandardUserDefaults.SetString(message, LastUploadKey);
         _lastUpload.Text = message;
     }

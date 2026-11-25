@@ -36,13 +36,19 @@ public sealed class SyncServiceAgentTests
     }
 
     [Theory]
-    [InlineData(HttpStatusCode.Locked, "Uploads are paused in Admin.")]
-    [InlineData(HttpStatusCode.Unauthorized, "Upload failed (HTTP 401).")]
-    [InlineData(HttpStatusCode.Redirect, "Upload failed (HTTP 302).")]
-    [InlineData(HttpStatusCode.InternalServerError, "Upload failed (HTTP 500).")]
-    public async Task Explains_an_upload_the_server_did_not_accept(HttpStatusCode status, string message)
+    [InlineData(HttpStatusCode.Locked, null, "Uploads are paused in Admin.")]
+    [InlineData(HttpStatusCode.Unauthorized, null,
+        "The sync server did not accept the device token. Pair again with the current token.")]
+    [InlineData(HttpStatusCode.BadRequest, "The capture time is missing or in the future.\n",
+        "The sync server rejected the upload: The capture time is missing or in the future.")]
+    [InlineData(HttpStatusCode.Conflict, "Conflicting snapshot at the same capture time.",
+        "The sync server rejected the upload: Conflicting snapshot at the same capture time.")]
+    [InlineData(HttpStatusCode.BadRequest, null, "Upload failed (HTTP 400).")]
+    [InlineData(HttpStatusCode.Redirect, null, "Upload failed (HTTP 302).")]
+    [InlineData(HttpStatusCode.BadGateway, "Bad Gateway", "Upload failed (HTTP 502).")]
+    public async Task Explains_an_upload_the_server_did_not_accept(HttpStatusCode status, string? reply, string message)
     {
-        using var handler = new RecordingHandler(status);
+        using var handler = new RecordingHandler(status, reply);
         using var http = new HttpClient(handler);
         var agent = new SyncServiceAgent(http);
 

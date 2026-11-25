@@ -8,4 +8,6 @@ dotnet_diagnostic.MA0016.severity = suggestion
 dotnet_diagnostic.MA0051.severity = suggestion
 
 dotnet_diagnostic.MA0048.severity = warning
+dotnet_diagnostic.MA0075.severity = warning
+dotnet_diagnostic.MA0076.severity = warning
 dotnet_diagnostic.IDE0130.severity = warning
