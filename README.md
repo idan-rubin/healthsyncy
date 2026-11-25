@@ -10,7 +10,7 @@ With my food log in the chat, I can ask “How does today’s calorie intake com
 
 ## Share today’s activity
 
-[Build and install the iPhone companion](docs/iphone.md) on a Mac. On your iPhone, tap **Share today’s summary**, allow access to the categories you want, then choose **Copy** or a destination in the iOS share sheet. This works before you set up a server.
+[Build and install the iPhone companion](docs/iphone.md) on a Mac. On your iPhone, open HealthSyncy and allow access to the categories you want. Tap **Share today’s summary**, then choose **Copy** or a destination in the iOS share sheet. This works before you set up a server.
 
 Here’s a summary with example data.
 
