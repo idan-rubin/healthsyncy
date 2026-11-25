@@ -12,7 +12,7 @@ It’s C# end to end, from the iPhone app to the server. [Why C#?](#why-c)
 
 ## Share today’s activity
 
-<img src="docs/home-screen.png" width="620" alt="The HealthSyncy home screen, paired and on first run">
+<img src="docs/home-screen-paired.png" width="300" alt="The HealthSyncy home screen showing today’s totals">
 
 [Build and install the iPhone companion](docs/iphone.md) on a Mac. On your iPhone, open HealthSyncy and allow access to the categories you want. Tap **Share today’s summary**, then choose **Copy** or a destination in the iOS share sheet. This works before you set up a server.
 
