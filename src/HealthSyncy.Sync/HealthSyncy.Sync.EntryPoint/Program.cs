@@ -9,5 +9,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapHealthChecks("/readyz");
 app.MapHealthChecks("/healthz", new() { Predicate = _ => false });
-app.MapControllers();
+app.MapControllers().RequireAuthorization();
 app.Run();

@@ -41,6 +41,16 @@ public sealed class InfrastructureServiceRegistrationTests
     }
 
     [Fact]
+    public void Refuses_to_run_with_a_malformed_connection_string()
+    {
+        using var services = Services(("MongoUri", "not-a-mongo-uri"));
+
+        var options = () => services.GetRequiredService<IOptions<MongoOptions>>().Value;
+
+        options.Should().Throw<OptionsValidationException>().WithMessage("*MongoUri needs a MongoDB connection string.*");
+    }
+
+    [Fact]
     public void Registers_the_MongoDB_readiness_check_and_the_system_clock()
     {
         using var services = Services(("MongoUri", "mongodb://127.0.0.1:1"));

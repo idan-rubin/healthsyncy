@@ -16,7 +16,6 @@ public sealed class SummaryServiceTests
 
     public SummaryServiceTests()
     {
-        CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
         var clock = new FakeTimeProvider(new(2026, 11, 2, 3, 30, 0, TimeSpan.Zero));
         clock.SetLocalTimeZone(_newYork);
         _mocker.Use<TimeProvider>(clock);
@@ -25,9 +24,14 @@ public sealed class SummaryServiceTests
 
     private Mock<IHealthReader> Reader => _mocker.GetMock<IHealthReader>();
 
-    [Fact]
-    public async Task Summarises_what_Health_recorded_today_in_the_phones_zone()
+    [Theory]
+    [InlineData("en-US")]
+    [InlineData("de-DE")]
+    [InlineData("th-TH")]
+    [InlineData("fa-IR")]
+    public async Task Summarises_what_Health_recorded_today_in_the_phones_zone(string phoneCulture)
     {
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(phoneCulture);
         Reader.Setup(reader => reader.ReadAsync(new DateOnly(2026, 11, 1), _newYork))
             .ReturnsAsync(new DailyTotals(1200, 66.456m, null, 13, 3, 500, 30, 12));
 

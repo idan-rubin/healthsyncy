@@ -1,3 +1,4 @@
+using System.Globalization;
 using HealthSyncy.Mobile.Domain.Health;
 
 namespace HealthSyncy.Mobile.Domain.Services;
@@ -24,9 +25,11 @@ internal sealed class SummaryService(IHealthReader reader, TimeProvider time) : 
         ];
         return string.Join(Environment.NewLine,
         [
-            $"Apple Health · {day:yyyy-MM-dd} · {now:HH:mm} ({zone.Id})",
+            string.Create(CultureInfo.InvariantCulture, $"Apple Health · {day:yyyy-MM-dd} · {now:HH:mm} ({zone.Id})"),
             .. metrics.Where(metric => metric.Value is not null)
-                .Select(metric => $"{metric.Label}: {metric.Value:0.##}{metric.Unit}")
+                .Select(metric => string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"{metric.Label}: {metric.Value:0.##}{metric.Unit}"))
         ]);
     }
 }

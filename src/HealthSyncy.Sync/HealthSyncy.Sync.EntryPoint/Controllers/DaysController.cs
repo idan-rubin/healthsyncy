@@ -1,12 +1,11 @@
 using HealthSyncy.Common.Contracts;
 using HealthSyncy.Sync.Contracts;
 using HealthSyncy.Sync.Domain;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HealthSyncy.Sync.EntryPoint.Controllers;
 
-[ApiController, Authorize]
+[ApiController]
 [Route("api/v1/days")]
 public sealed class DaysController(IUploadService uploads) : ControllerBase
 {

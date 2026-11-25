@@ -65,6 +65,7 @@ public sealed class ConnectorApiTests : IDisposable
         using var response = await GetAsync("/.well-known/oauth-protected-resource/mcp", token: null);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.Headers.CacheControl!.NoStore.Should().BeTrue();
         (await response.Content.ReadAsStringAsync(Cancellation)).Should().Be(
             """{"resource":"https://connector.test/mcp","authorization_servers":["https://issuer.test/realms/health"],"scopes_supported":["activity.read"],"bearer_methods_supported":["header"]}""");
     }
@@ -78,6 +79,7 @@ public sealed class ConnectorApiTests : IDisposable
         using var response = await GetAsync(DayPath, Jwt());
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.Headers.CacheControl!.NoStore.Should().BeTrue();
         (await response.Content.ReadAsStringAsync(Cancellation)).Should().Be(
             """{"day":"2026-11-01","timeZone":"UTC","capturedAtUtc":"2026-11-01T18:00:00Z","receivedAtUtc":"2026-11-01T18:01:00Z","totals":{"steps":1200,"activeKcal":66.5,"restingKcal":700,"exerciseMinutes":13,"standHours":3,"moveGoalKcal":500,"exerciseGoalMinutes":30,"standGoalHours":12}}""");
     }
