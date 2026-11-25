@@ -1,21 +1,22 @@
 using Foundation;
-using HealthSyncy.Core;
+using HealthSyncy.iOS.DI;
+using Microsoft.Extensions.DependencyInjection;
 using UIKit;
 
 namespace HealthSyncy.iOS;
 
 public static class Program
 {
+    internal static IServiceProvider Services { get; } = new ServiceCollection().AddMobile().BuildServiceProvider();
+
     public static void Main(string[] args) => UIApplication.Main(args, null, typeof(AppDelegate));
 }
 
 [Register("AppDelegate")]
 public sealed class AppDelegate : UIApplicationDelegate
 {
-
-    private readonly HealthReader reader = new();
-    private readonly SyncServiceAgent sync = new();
-    private readonly SyncQueue uploads = new();
+    private readonly ISyncBL sync = Program.Services.GetRequiredService<ISyncBL>();
+    private readonly ISummaryBL summary = Program.Services.GetRequiredService<ISummaryBL>();
     private readonly UILabel status = new() { Lines = 0 };
     private readonly UILabel background = new() { Lines = 0 };
     private readonly UILabel lastUpload = new() { Lines = 0 };
@@ -24,7 +25,8 @@ public sealed class AppDelegate : UIApplicationDelegate
 
     public override bool FinishedLaunching(UIApplication application, NSDictionary? launchOptions)
     {
-        if (NSUserDefaults.StandardUserDefaults.BoolForKey("paired")) _ = RegisterBackground();
+        sync.Uploaded += sent => BeginInvokeOnMainThread(() => ShowUpload(sent));
+        if (sync.IsPaired) _ = RegisterBackground();
         return true;
     }
 
@@ -41,11 +43,8 @@ public sealed class AppDelegate : UIApplicationDelegate
             if (!Uri.TryCreate(host.Text?.Trim(), UriKind.Absolute, out var url) || url.Scheme != "https" ||
                 url.UserInfo.Length != 0 || url.PathAndQuery != "/" || url.Fragment.Length != 0 ||
                 string.IsNullOrWhiteSpace(token.Text)) throw new InvalidOperationException("Enter an HTTPS origin and device token.");
-            var candidate = new Pairing(url.GetLeftPart(UriPartial.Authority), token.Text!);
-            await reader.Authorize();
-            await uploads.Pair(() => UploadDays(candidate), candidate.Save);
+            await sync.Pair(new Pairing(url.GetLeftPart(UriPartial.Authority), token.Text!));
             token.Text = "";
-            NSUserDefaults.StandardUserDefaults.SetBool(true, "paired");
             _ = RegisterBackground();
         });
         refresh.TouchUpInside += (_, _) => Refresh();
@@ -53,23 +52,7 @@ public sealed class AppDelegate : UIApplicationDelegate
         share.SetTitle("Share today’s summary", UIControlState.Normal);
         share.TouchUpInside += async (_, _) => await Run(async () =>
         {
-            await reader.Authorize();
-            var now = DateTimeOffset.Now;
-            var zone = TimeZoneInfo.Local;
-            var day = DateOnly.FromDateTime(now.LocalDateTime);
-            var totals = await reader.Read(day, zone);
-            if (!totals.IsValid()) throw new InvalidOperationException("No readable activity yet.");
-            var lines = new List<string> { $"Apple Health · {day:yyyy-MM-dd} · {now:HH:mm} ({zone.Id})" };
-            void Add(string label, decimal? value, string unit)
-            {
-                if (value is not null) lines.Add($"{label}: {value:0.##}{unit}");
-            }
-            Add("Steps", totals.Steps, "");
-            Add("Active energy", totals.ActiveKcal, " kcal");
-            Add("Resting energy", totals.RestingKcal, " kcal");
-            Add("Exercise", totals.ExerciseMinutes, " min");
-            Add("Stand", totals.StandHours, " h");
-            var text = string.Join(Environment.NewLine, lines);
+            var text = await summary.Today();
             BeginInvokeOnMainThread(() =>
             {
                 var sheet = new UIActivityViewController([new NSString(text)], null);
@@ -85,23 +68,23 @@ public sealed class AppDelegate : UIApplicationDelegate
             stack.TrailingAnchor.ConstraintEqualTo(safe.TrailingAnchor, -20), stack.TopAnchor.ConstraintEqualTo(safe.TopAnchor, 24)]);
         var window = new UIWindow(scene) { RootViewController = view };
         window.MakeKeyAndVisible();
-        host.Text = Pairing.Load()?.Origin;
+        host.Text = sync.PairedOrigin;
         lastUpload.Text = NSUserDefaults.StandardUserDefaults.StringForKey("lastUpload");
         return window;
     }
 
     internal void Refresh()
     {
-        if (!NSUserDefaults.StandardUserDefaults.BoolForKey("paired")) return;
+        if (!sync.IsPaired) return;
         _ = RegisterBackground();
-        _ = Run(Sync);
+        _ = Run(sync.Refresh);
     }
 
     private async Task RegisterBackground()
     {
         try
         {
-            var failed = await reader.Observe(Sync, message => BeginInvokeOnMainThread(() => status.Text = message));
+            var failed = await sync.Observe(message => BeginInvokeOnMainThread(() => status.Text = message));
             background.Text = failed.Count == 0 ? "Background delivery enabled." :
                 $"Background delivery unavailable for {string.Join(", ", failed)}. Tap Sync now to retry.";
         }
@@ -117,35 +100,15 @@ public sealed class AppDelegate : UIApplicationDelegate
         catch (Exception e) { BeginInvokeOnMainThread(() => status.Text = e is InvalidOperationException ? e.Message : "Sync could not finish. Try again when connected."); }
     }
 
-    private Task Sync() => uploads.Refresh(() => UploadDays(
-        Pairing.Load() ?? throw new InvalidOperationException("Unlock your phone or pair it first.")));
-
-    private async Task<int> UploadDays(Pairing pairing)
+    private void ShowUpload(int sent)
     {
-        var zone = TimeZoneInfo.Local;
-        var now = DateTimeOffset.UtcNow;
-        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, zone).DateTime);
-        var sent = 0;
-        for (var offset = 0; offset < 7; offset++)
-        {
-            var day = today.AddDays(-offset);
-            var totals = await reader.Read(day, zone);
-            if (!totals.IsValid()) continue;
-            await sync.Upload(pairing, day, new Upload(zone.Id, now, totals));
-            sent++;
-        }
-        BeginInvokeOnMainThread(() =>
-        {
-            status.Text = sent == 0 ? "No readable activity yet." : "";
-            if (sent == 0) return;
-            var message = $"Last upload: {DateTimeOffset.Now:g} ({sent} days).";
-            NSUserDefaults.StandardUserDefaults.SetString(message, "lastUpload");
-            lastUpload.Text = message;
-        });
-        return sent;
+        status.Text = sent == 0 ? "No readable activity yet." : "";
+        if (sent == 0) return;
+        var message = $"Last upload: {DateTimeOffset.Now:g} ({sent} days).";
+        NSUserDefaults.StandardUserDefaults.SetString(message, "lastUpload");
+        lastUpload.Text = message;
     }
 }
-
 
 [Preserve(AllMembers = true)]
 [Register("SceneDelegate")]

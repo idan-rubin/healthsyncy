@@ -4,7 +4,7 @@ using HealthSyncy.Core;
 
 namespace HealthSyncy.iOS;
 
-internal sealed class HealthReader
+internal sealed class HealthReader : IHealthReader
 {
     private readonly HKHealthStore store = new();
     private readonly HKQuantityType steps = HKQuantityType.Create(HKQuantityTypeIdentifier.StepCount)!;
