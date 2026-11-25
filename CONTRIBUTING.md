@@ -10,7 +10,7 @@ HealthSyncy is a small, single-maintainer project. Each instance serves one pers
 
 ## Build and test
 
-You need a .NET 11 SDK, Docker, Bash 4 or newer, OpenSSL, Python 3 and curl. From the repository root:
+You need a .NET 11 SDK, Docker, Bash 4 or newer, OpenSSL, Python 3 and curl. Run these commands from the repository root.
 
 ```sh
 dotnet build HealthSyncy.slnx -c Release
@@ -20,13 +20,15 @@ python3 checks/manifests.py
 
 On macOS, the integration script runs the .NET services and temporary OAuth issuer in a Linux test container. Docker must be running. The fixture needs no changes to your Mac’s trusted certificates. On Linux, use `checks/mongo.sh --container` to exercise the same path.
 
-Pull requests run the build, containerized integration suite, and manifest checks. The iPhone companion builds separately on macOS with Xcode and the .NET iOS workload; the exact steps are in `.github/workflows/ci.yml`.
+The integration suite starts a disposable MongoDB, exercises storage permissions and conflicting writes, then sends synthetic uploads and authenticated REST and MCP requests.
+
+Pull requests run the build, containerized integration suite, and manifest checks. The iPhone companion builds separately on macOS. See the [device build guide](docs/iphone.md) or the [simulator checks in CI](.github/workflows/ci.yml).
 
 ## Pull requests
 
 - Keep each pull request to one change, with a short title that says what it does.
 - The product code is C#. Deployment and CI tooling lives in `scripts/` and `checks/`.
-- Update the README when behaviour, configuration or deployment steps change.
+- Update the README or the relevant guide in `docs/` when behavior, configuration or deployment steps change.
 
 ## License
 

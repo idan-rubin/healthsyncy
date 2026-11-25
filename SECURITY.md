@@ -6,7 +6,7 @@ HealthSyncy has no versioned releases. Security fixes land on `main`, and the co
 
 ## Reporting a vulnerability
 
-Report vulnerabilities privately through GitHub: open this repository's **Security** tab and choose **Report a vulnerability**. Do not open a public issue or pull request for a security problem.
+Use the repository’s [private vulnerability report form](https://github.com/idan-rubin/healthsyncy/security/advisories/new). The report goes to the maintainer.
 
 Include what you found, how to reproduce it, and what an attacker could do with it. Never include real health data, device tokens or other secrets in a report.
 
