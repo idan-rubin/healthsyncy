@@ -1,4 +1,4 @@
-<img src="src/HealthSyncy.Mobile/HealthSyncy.Mobile.EntryPoint/Assets.xcassets/AppIcon.appiconset/AppIcon.png" width="72" height="72" alt="">
+<img src="docs/app-icon.png" width="72" height="72" alt="">
 
 # HealthSyncy
 
