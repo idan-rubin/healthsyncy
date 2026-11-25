@@ -78,7 +78,7 @@ public sealed class AppDelegate : UIApplicationDelegate
                 view.PresentViewController(sheet, true, null);
             });
         });
-        var title = new UILabel { Text = "HealthSyncy", Font = UIFont.BoldSystemFontOfSize(32) };
+        var title = new UILabel { Text = "HealthSyncy", Font = UIFont.BoldSystemFontOfSize(32)! };
         var stack = new UIStackView(new UIView[] { title, host, token, connect, refresh, share, background, lastUpload, status })
             { Axis = UILayoutConstraintAxis.Vertical, Spacing = 12, TranslatesAutoresizingMaskIntoConstraints = false };
         view.View.AddSubview(stack);
