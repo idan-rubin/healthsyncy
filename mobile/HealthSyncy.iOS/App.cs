@@ -159,17 +159,20 @@ public sealed class AppDelegate : UIApplicationDelegate
 
 [Preserve(AllMembers = true)]
 [Register("SceneDelegate")]
-public sealed class SceneDelegate : UIWindowSceneDelegate
+public sealed class SceneDelegate : UIResponder, IUIWindowSceneDelegate
 {
-    public override UIWindow? Window { get; set; }
+    [Export("window")]
+    public UIWindow? Window { get; set; }
 
-    public override void WillConnect(UIScene scene, UISceneSession session, UISceneConnectionOptions options)
+    [Export("scene:willConnectToSession:options:")]
+    public void WillConnect(UIScene scene, UISceneSession session, UISceneConnectionOptions options)
     {
         if (scene is UIWindowScene windowScene && UIApplication.SharedApplication.Delegate is AppDelegate app)
             Window = app.CreateWindow(windowScene);
     }
 
-    public override void DidBecomeActive(UIScene scene)
+    [Export("sceneDidBecomeActive:")]
+    public void DidBecomeActive(UIScene scene)
     {
         if (UIApplication.SharedApplication.Delegate is AppDelegate app) app.Refresh();
     }
