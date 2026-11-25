@@ -6,6 +6,8 @@
 
 Copy your daily totals straight from your iPhone, or connect ChatGPT to a read-only MCP server you host. You choose which Health categories the companion can read.
 
+With my food log in the chat, I can ask “How does today’s calorie intake compare with what I’ve burned so far?” HealthSyncy supplies my active and resting calories from Apple Health. I wrote about trading daily screenshots for that conversation in [AI, Meet Apple Health](https://mrrubin.substack.com/p/ai-meet-apple-health).
+
 ## Share today’s activity
 
 [Build and install the iPhone companion](docs/iphone.md) on a Mac. On your iPhone, tap **Share today’s summary**, allow access to the categories you want, then choose **Copy** or a destination in the iOS share sheet. This works before you set up a server.
