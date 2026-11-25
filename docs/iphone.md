@@ -26,6 +26,8 @@ For a simulator build on Apple silicon, run `dotnet build -c Debug -r iossimulat
 
 ## Share a summary from your iPhone
 
+<img src="home-screen.png" width="620" alt="The HealthSyncy home screen, paired and on first run">
+
 Open HealthSyncy and grant read access to the categories you want to share. The home screen shows today’s totals, with your active and resting energy added up as **Burn so far**. Tap **Share today’s summary** and choose **Copy** in the iOS share sheet to paste the summary into a message. You can leave the server and token fields empty. If you see “No readable activity yet,” check that Apple Health has data for today and that HealthSyncy can read the relevant categories.
 
 ## Pair with your server
