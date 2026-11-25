@@ -8,9 +8,12 @@ permissions:
 jobs:
   checks:
     uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+      deployments: read
   publish:
     needs: checks
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && needs.checks.outputs.services == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
