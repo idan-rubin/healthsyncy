@@ -26,13 +26,11 @@ resharper_unused_type_global_highlighting = none
 resharper_unused_parameter_global_highlighting = none
 resharper_class_never_instantiated_global_highlighting = none
 
-# ─── Razor Pages code-behind ────────────────────────────────────
-# Index.cshtml.cs holds IndexModel by framework convention.
 [*.cshtml.cs]
 dotnet_diagnostic.MA0048.severity = none
 
 [tests/**.cs]
-dotnet_diagnostic.IDE0058.severity = none   # Fluent assertion chains return a value
+dotnet_diagnostic.IDE0058.severity = none
 
 # ─── JSON files ──────────────────────────────────────────────────
 [*.json]

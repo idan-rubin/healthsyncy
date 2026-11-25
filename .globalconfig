@@ -7,6 +7,5 @@ dotnet_diagnostic.MA0004.severity = suggestion
 dotnet_diagnostic.MA0016.severity = suggestion
 dotnet_diagnostic.MA0051.severity = suggestion
 
-# One type per file, named after the type, in a namespace that matches its folder.
 dotnet_diagnostic.MA0048.severity = warning
 dotnet_diagnostic.IDE0130.severity = warning
