@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using HealthSyncy.Mobile.Domain.Pairings;
@@ -9,7 +10,8 @@ internal sealed class SyncServiceAgent(HttpClient http) : ISyncServiceAgent
 {
     public async Task UploadAsync(Pairing pairing, DateOnly day, UploadRequest request)
     {
-        using var message = new HttpRequestMessage(HttpMethod.Put, $"{pairing.Origin}/api/v1/days/{day:yyyy-MM-dd}")
+        var address = string.Create(CultureInfo.InvariantCulture, $"{pairing.Origin}/api/v1/days/{day:yyyy-MM-dd}");
+        using var message = new HttpRequestMessage(HttpMethod.Put, address)
         {
             Content = JsonContent.Create(request, MobileJson.Default.UploadRequest),
             Headers = { Authorization = new AuthenticationHeaderValue("Bearer", pairing.Token) }

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using HealthSyncy.Mobile.Domain;
 using HealthSyncy.Mobile.Domain.Pairings;
@@ -13,9 +14,13 @@ public sealed class SyncServiceAgentTests
     private static readonly UploadRequest _upload = new("UTC", new(2026, 11, 1, 18, 0, 0, TimeSpan.Zero),
         new(1200, 66.5m, 700, 13, 3, 500, 30, 12));
 
-    [Fact]
-    public async Task Puts_the_day_to_the_paired_origin_with_the_device_token()
+    [Theory]
+    [InlineData("en-US")]
+    [InlineData("th-TH")]
+    [InlineData("fa-IR")]
+    public async Task Puts_the_day_to_the_paired_origin_with_the_device_token(string phoneCulture)
     {
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(phoneCulture);
         using var handler = new RecordingHandler(HttpStatusCode.OK);
         using var http = new HttpClient(handler);
         var agent = new SyncServiceAgent(http);
