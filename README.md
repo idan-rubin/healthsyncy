@@ -4,13 +4,15 @@
 
 **Share today’s Apple Health activity. Ask about your week.**
 
-Built with [C# 15] and [.NET 11], from [.NET for iOS] on the iPhone to [ASP.NET Core] on the server. For server sign-in, use [Keycloak] or another OpenID Connect provider.
-
 Copy your daily totals straight from your iPhone, or let ChatGPT read them through a Model Context Protocol (MCP) server you host. You choose which Apple Health categories to share.
 
 With my food log in the chat, I can ask “How does today’s calorie intake compare with what I’ve burned so far?” HealthSyncy supplies my active and resting calories from Apple Health. I wrote about trading daily screenshots for that conversation in [AI, Meet Apple Health](https://mrrubin.substack.com/p/ai-meet-apple-health).
 
+It’s C# end to end, from the iPhone app to the server. [Why C#?](#why-c)
+
 ## Share today’s activity
+
+<img src="docs/home-screen-paired.png" width="270" alt="The HealthSyncy home screen showing today’s totals">
 
 [Build and install the iPhone companion](docs/iphone.md) on a Mac. On your iPhone, open HealthSyncy and allow access to the categories you want. Tap **Share today’s summary**, then choose **Copy** or a destination in the iOS share sheet. This works before you set up a server.
 
@@ -51,19 +53,11 @@ The companion can read steps, active and resting energy, exercise minutes, stand
 
 ## Why C#?
 
-I chose C# because I love it. The iPhone app uses [UIKit] for its interface and [HealthKit] to read activity. On the server, [MongoDB] stores daily totals and the [MCP C# SDK] makes them available to authorized clients.
+I chose C# because I love it. HealthSyncy is built with [C# 15] and [.NET 11], from [.NET for iOS] on the iPhone to [ASP.NET Core] on the server.
+
+The iPhone app uses [UIKit] for its interface and [HealthKit] to read activity. On the server, [MongoDB] stores daily totals and the [MCP C# SDK] makes them available to authorized clients. For server sign-in, use [Keycloak] or another OpenID Connect provider.
 
 [How the code is organised](docs/architecture.md#how-the-code-is-organised) shows where each pattern and language feature lives.
-
-[C# 15]: https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-15
-[.NET 11]: https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-11/overview
-[.NET for iOS]: https://learn.microsoft.com/en-us/dotnet/ios/
-[UIKit]: https://developer.apple.com/documentation/uikit
-[HealthKit]: https://developer.apple.com/documentation/healthkit
-[ASP.NET Core]: https://learn.microsoft.com/en-us/aspnet/core/overview?view=aspnetcore-11.0
-[Keycloak]: https://www.keycloak.org/securing-apps/oidc-layers
-[MongoDB]: https://www.mongodb.com/docs/manual/
-[MCP C# SDK]: https://csharp.sdk.modelcontextprotocol.io/v2/
 
 ## Project guides
 
@@ -73,3 +67,13 @@ I chose C# because I love it. The iPhone app uses [UIKit] for its interface and 
 - [Security policy](SECURITY.md) explains how to report a vulnerability privately.
 
 HealthSyncy is [MIT licensed](LICENSE). MongoDB Community Server uses the [SSPL](https://www.mongodb.com/legal/licensing/server-side-public-license).
+
+[C# 15]: https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-15
+[.NET 11]: https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-11/overview
+[.NET for iOS]: https://learn.microsoft.com/en-us/dotnet/ios/
+[ASP.NET Core]: https://learn.microsoft.com/en-us/aspnet/core/overview?view=aspnetcore-11.0
+[UIKit]: https://developer.apple.com/documentation/uikit
+[HealthKit]: https://developer.apple.com/documentation/healthkit
+[MongoDB]: https://www.mongodb.com/docs/manual/
+[MCP C# SDK]: https://csharp.sdk.modelcontextprotocol.io/v2/
+[Keycloak]: https://www.keycloak.org/securing-apps/oidc-layers
