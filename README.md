@@ -6,6 +6,35 @@ This is a single-person, single-iPhone implementation. Each person runs their ow
 
 ## How it fits together
 
+```mermaid
+flowchart LR
+    phone["iPhone companion<br/>reads HealthKit"]
+    agent["ChatGPT<br/>MCP client"]
+    owner["Owner's browser"]
+    idp["OIDC provider you control<br/>for example Keycloak"]
+
+    subgraph server["Your server"]
+        sync["Sync"]
+        connector["Connector<br/>MCP and REST"]
+        admin["Admin"]
+        db[("MongoDB")]
+    end
+
+    phone -- "daily totals<br/>device token" --> sync
+    sync -- "writes snapshots" --> db
+    agent -- "questions<br/>access token" --> connector
+    connector -- "reads snapshots" --> db
+    owner -- "dashboard, pause" --> admin
+    admin -- "reads snapshots<br/>manages settings" --> db
+
+    agent -. "owner signs in<br/>and approves" .-> idp
+    owner -. "signs in" .-> idp
+    connector -. "verifies tokens" .-> idp
+    admin -. "verifies sign-in" .-> idp
+```
+
+Solid arrows carry activity data. Dotted arrows are sign-in and token checks against the OIDC provider, which never sees activity data.
+
 | Component | Responsibility | Access |
 | --- | --- | --- |
 | iPhone companion | Asks for HealthKit read permission, calculates daily totals, sends snapshots to your sync host | Selected HealthKit types and a device upload token |
