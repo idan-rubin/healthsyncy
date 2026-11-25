@@ -54,6 +54,7 @@ The figure covers the hand-written code in every project except the iPhone entry
 - The product code is C#. Deployment and CI tooling lives in `scripts/` and `checks/`.
 - Follow [the code layout](docs/architecture.md#how-the-code-is-organised). Put a rule in a `Domain` project behind an interface, keep the entry point thin, and add unit tests to the matching project in `tests/unit`.
 - Update the README or the relevant guide in `docs/` when behavior, configuration or deployment steps change.
+- On pull requests, backend checks run for server code, the mobile domain, tests, checks, deployment scripts and manifests, and build inputs such as `.dockerignore`. The iOS job runs for phone code and the contracts it shares. Changes to shared build rules or the CI selector run both jobs. See [the full path lists](checks/changes.py).
 
 ## License
 

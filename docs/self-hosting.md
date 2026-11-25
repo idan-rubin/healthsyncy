@@ -30,9 +30,9 @@ Provision a certificate for all three hosts in the namespace Secret `healthsyncy
 
 ## Deploy a published revision
 
-After CI passes on `main`, GitHub Actions publishes Sync, Connector and Admin images for amd64 and arm64, tagged with the full commit SHA, and deploys them. The cluster needs read access to all three packages. Use public packages or configure registry pull credentials in the namespace.
+When a push to `main` changes the services, their images or the deployment files, GitHub Actions checks it, publishes Sync, Connector and Admin images for amd64 and arm64 tagged with the full commit SHA, and deploys them. A service change or revert in the push triggers deployment. Other pushes deploy if production is behind or the latest production deployment has no confirmed success. The cluster needs read access to all three packages. Use public packages or configure registry pull credentials in the namespace.
 
-- **From GitHub Actions.** Configure a `production` environment with the variable `HEALTHSYNCY_DOMAIN` and the secret `KUBECONFIG_B64`, a base64-encoded kubeconfig scoped to the deployment. The runner needs network access to the Kubernetes API. Every push to `main` deploys. To redeploy without a new commit, run **CI/CD** on `main`.
+- **From GitHub Actions.** Configure a `production` environment with the variable `HEALTHSYNCY_DOMAIN` and the secret `KUBECONFIG_B64`, a base64-encoded kubeconfig scoped to the deployment. The runner needs network access to the Kubernetes API. To redeploy without a new commit, run **CI/CD** on `main`.
 - **From your shell.** Export `IMAGE_PREFIX` (for this repository, `ghcr.io/idan-rubin/healthsyncy`) and `IMAGE_TAG` (a published 40-character commit SHA). Run `scripts/deploy.sh`. To redeploy an earlier revision, use its published SHA.
 
 Both routes wait for MongoDB, Sync, Connector and Admin to roll out. To preview the manifests offline, set the same image variables and run the renderer.

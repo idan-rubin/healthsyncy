@@ -2,10 +2,35 @@ name: Code checks
 on:
   pull_request:
   workflow_call:
+    outputs:
+      services:
+        value: ${{ jobs.changes.outputs.services }}
 permissions:
   contents: read
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      deployments: read
+    outputs:
+      backend: ${{ steps.select.outputs.backend }}
+      ios: ${{ steps.select.outputs.ios }}
+      services: ${{ steps.select.outputs.services }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - run: python3 checks/test_changes.py
+      - id: select
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PUSH_BEFORE: ${{ github.event.before }}
+        run: python3 checks/changes.py
   backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -23,6 +48,8 @@ jobs:
       - run: checks/mongo.sh --container
       - run: python3 checks/manifests.py
   ios:
+    needs: changes
+    if: needs.changes.outputs.ios == 'true'
     runs-on: xcode-27
     timeout-minutes: 35
     defaults:
