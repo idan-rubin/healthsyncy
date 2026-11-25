@@ -1,5 +1,3 @@
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using Foundation;
 using HealthSyncy.Core;
 using UIKit;
@@ -16,7 +14,7 @@ public sealed class AppDelegate : UIApplicationDelegate
 {
 
     private readonly HealthReader reader = new();
-    private readonly HttpClient http = new(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(15) };
+    private readonly SyncServiceAgent sync = new();
     private readonly SyncQueue uploads = new();
     private readonly UILabel status = new() { Lines = 0 };
     private readonly UILabel background = new() { Lines = 0 };
@@ -133,13 +131,7 @@ public sealed class AppDelegate : UIApplicationDelegate
             var day = today.AddDays(-offset);
             var totals = await reader.Read(day, zone);
             if (!totals.IsValid()) continue;
-            using var request = new HttpRequestMessage(HttpMethod.Put,
-                FormattableString.Invariant($"{pairing.Origin}/api/v1/days/{day:yyyy-MM-dd}"))
-                { Content = JsonContent.Create(new Upload(zone.Id, now, totals), MobileJson.Default.Upload) };
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", pairing.Token);
-            using var response = await http.SendAsync(request);
-            if ((int)response.StatusCode == 423) throw new InvalidOperationException("Uploads are paused in Admin.");
-            if (!response.IsSuccessStatusCode) throw new InvalidOperationException($"Upload failed (HTTP {(int)response.StatusCode}).");
+            await sync.Upload(pairing, day, new Upload(zone.Id, now, totals));
             sent++;
         }
         BeginInvokeOnMainThread(() =>
