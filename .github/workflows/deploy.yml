@@ -3,11 +3,6 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      deploy:
-        type: boolean
-        description: Deploy this main revision to production
-        default: false
 permissions:
   contents: read
 jobs:
@@ -49,7 +44,7 @@ jobs:
         run: docker run --rm --entrypoint cat "$IMAGE" /app/LICENSE | cmp LICENSE -
   deploy:
     needs: publish
-    if: github.event_name == 'workflow_dispatch' && inputs.deploy && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
     concurrency: healthsyncy-production
