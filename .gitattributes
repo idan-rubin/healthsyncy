@@ -1,0 +1,7 @@
+# Keep GitHub's language bar about the product code. Deployment and CI tooling
+# is left out of the statistics; the files themselves are unaffected.
+scripts/** -linguist-detectable
+checks/*.py -linguist-detectable
+checks/*.sh -linguist-detectable
+deploy/k3s/mongo-init.js -linguist-detectable
+Dockerfile -linguist-detectable
