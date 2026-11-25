@@ -47,6 +47,23 @@ public sealed class SummaryServiceTests
     }
 
     [Fact]
+    public async Task Adds_the_burn_so_far_when_both_energies_are_readable()
+    {
+        Reader.Setup(reader => reader.ReadAsync(new DateOnly(2026, 11, 1), _newYork))
+            .ReturnsAsync(new DailyTotals(7240, 386, 1650.5m, 32, 9, 500, 30, 12));
+
+        var summary = await _service.GetTodayAsync();
+
+        summary.Split(Environment.NewLine).Skip(1).Should().Equal(
+            "Steps: 7240",
+            "Active energy: 386 kcal",
+            "Resting energy: 1650.5 kcal",
+            "Burn so far: 2036.5 kcal",
+            "Exercise: 32 min",
+            "Stand: 9 h");
+    }
+
+    [Fact]
     public async Task Reads_todays_activity_for_the_home_screen()
     {
         var totals = new DailyTotals(7240, 386, 1650, 32, 9, 500, 30, 12);

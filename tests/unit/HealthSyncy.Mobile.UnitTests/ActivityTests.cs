@@ -31,7 +31,7 @@ public sealed class ActivityTests
     [Fact]
     public void Lists_the_metrics_in_the_order_the_summary_shares_them() =>
         _activity.Metrics.Select(metric => metric.Label).Should().Equal(
-            "Steps", "Active energy", "Resting energy", "Exercise", "Stand");
+            "Steps", "Active energy", "Resting energy", "Burn so far", "Exercise", "Stand");
 
     [Theory]
     [InlineData(386, 500, "0.772")]

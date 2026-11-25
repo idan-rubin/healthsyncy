@@ -20,6 +20,8 @@ Here’s a summary with example data.
 Apple Health · 2026-05-12 · 18:40 (America/New_York)
 Steps: 7240
 Active energy: 386 kcal
+Resting energy: 1650 kcal
+Burn so far: 2036 kcal
 Exercise: 32 min
 Stand: 9 h
 ```
