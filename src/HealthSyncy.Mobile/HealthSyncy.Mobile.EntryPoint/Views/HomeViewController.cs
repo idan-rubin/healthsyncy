@@ -186,7 +186,6 @@ internal sealed class HomeViewController : UIViewController
     private async Task ShareAsync()
     {
         var sheet = new UIActivityViewController([new NSString(await _summary.GetTodayAsync())], null);
-        sheet.PopoverPresentationController?.SourceView = _share;
         PresentViewController(sheet, true, null);
     }
 
