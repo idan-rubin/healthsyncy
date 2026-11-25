@@ -17,7 +17,7 @@ public sealed class AppDelegate : UIApplicationDelegate
 
     private readonly HealthReader reader = new();
     private readonly HttpClient http = new(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(15) };
-    private readonly SemaphoreSlim gate = new(1);
+    private readonly SyncQueue uploads = new();
     private readonly UILabel status = new() { Lines = 0 };
     private readonly UILabel background = new() { Lines = 0 };
     private readonly UILabel lastUpload = new() { Lines = 0 };
@@ -43,12 +43,12 @@ public sealed class AppDelegate : UIApplicationDelegate
             if (!Uri.TryCreate(host.Text?.Trim(), UriKind.Absolute, out var url) || url.Scheme != "https" ||
                 url.UserInfo.Length != 0 || url.PathAndQuery != "/" || url.Fragment.Length != 0 ||
                 string.IsNullOrWhiteSpace(token.Text)) throw new InvalidOperationException("Enter an HTTPS origin and device token.");
+            var candidate = new Pairing(url.GetLeftPart(UriPartial.Authority), token.Text!);
             await reader.Authorize();
-            new Pairing(url.GetLeftPart(UriPartial.Authority), token.Text!).Save();
+            await uploads.Pair(() => UploadDays(candidate), candidate.Save);
             token.Text = "";
             NSUserDefaults.StandardUserDefaults.SetBool(true, "paired");
             _ = RegisterBackground();
-            await Sync();
         });
         refresh.TouchUpInside += (_, _) => Refresh();
         var share = UIButton.FromType(UIButtonType.System);
@@ -119,40 +119,38 @@ public sealed class AppDelegate : UIApplicationDelegate
         catch (Exception e) { BeginInvokeOnMainThread(() => status.Text = e is InvalidOperationException ? e.Message : "Sync could not finish. Try again when connected."); }
     }
 
-    private async Task Sync()
+    private Task Sync() => uploads.Refresh(() => UploadDays(
+        Pairing.Load() ?? throw new InvalidOperationException("Unlock your phone or pair it first.")));
+
+    private async Task<int> UploadDays(Pairing pairing)
     {
-        if (!await gate.WaitAsync(0)) return;
-        try
+        var zone = TimeZoneInfo.Local;
+        var now = DateTimeOffset.UtcNow;
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, zone).DateTime);
+        var sent = 0;
+        for (var offset = 0; offset < 7; offset++)
         {
-            var pairing = Pairing.Load() ?? throw new InvalidOperationException("Unlock your phone or pair it first.");
-            var zone = TimeZoneInfo.Local;
-            var now = DateTimeOffset.UtcNow;
-            var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, zone).DateTime);
-            var sent = 0;
-            for (var offset = 0; offset < 7; offset++)
-            {
-                var day = today.AddDays(-offset);
-                var totals = await reader.Read(day, zone);
-                if (!totals.IsValid()) continue;
-                using var request = new HttpRequestMessage(HttpMethod.Put,
-                    FormattableString.Invariant($"{pairing.Origin}/api/v1/days/{day:yyyy-MM-dd}"))
-                    { Content = JsonContent.Create(new Upload(zone.Id, now, totals), MobileJson.Default.Upload) };
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", pairing.Token);
-                using var response = await http.SendAsync(request);
-                if ((int)response.StatusCode == 423) throw new InvalidOperationException("Uploads are paused in Admin.");
-                if (!response.IsSuccessStatusCode) throw new InvalidOperationException($"Upload failed (HTTP {(int)response.StatusCode}).");
-                sent++;
-            }
-            BeginInvokeOnMainThread(() =>
-            {
-                status.Text = sent == 0 ? "No readable activity yet." : "";
-                if (sent == 0) return;
-                var message = $"Last upload: {DateTimeOffset.Now:g} ({sent} days).";
-                NSUserDefaults.StandardUserDefaults.SetString(message, "lastUpload");
-                lastUpload.Text = message;
-            });
+            var day = today.AddDays(-offset);
+            var totals = await reader.Read(day, zone);
+            if (!totals.IsValid()) continue;
+            using var request = new HttpRequestMessage(HttpMethod.Put,
+                FormattableString.Invariant($"{pairing.Origin}/api/v1/days/{day:yyyy-MM-dd}"))
+                { Content = JsonContent.Create(new Upload(zone.Id, now, totals), MobileJson.Default.Upload) };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", pairing.Token);
+            using var response = await http.SendAsync(request);
+            if ((int)response.StatusCode == 423) throw new InvalidOperationException("Uploads are paused in Admin.");
+            if (!response.IsSuccessStatusCode) throw new InvalidOperationException($"Upload failed (HTTP {(int)response.StatusCode}).");
+            sent++;
         }
-        finally { gate.Release(); }
+        BeginInvokeOnMainThread(() =>
+        {
+            status.Text = sent == 0 ? "No readable activity yet." : "";
+            if (sent == 0) return;
+            var message = $"Last upload: {DateTimeOffset.Now:g} ({sent} days).";
+            NSUserDefaults.StandardUserDefaults.SetString(message, "lastUpload");
+            lastUpload.Text = message;
+        });
+        return sent;
     }
 }
 

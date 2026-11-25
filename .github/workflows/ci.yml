@@ -15,7 +15,7 @@ jobs:
           dotnet-version: 11.0.x
       - run: dotnet restore HealthSyncy.slnx
       - run: dotnet build HealthSyncy.slnx -c Release --no-restore
-      - run: checks/mongo.sh
+      - run: checks/mongo.sh --container
       - run: python3 checks/manifests.py
   ios:
     runs-on: xcode-27
