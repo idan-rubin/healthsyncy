@@ -1,21 +1,17 @@
 # Security Policy
 
-## Supported Versions
+## Supported versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+HealthSyncy has no versioned releases. Security fixes land on `main`, and the container images published from the latest `main` commit are the only supported build. If you run an instance, redeploy from a current commit to pick up fixes.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+## Reporting a vulnerability
 
-## Reporting a Vulnerability
+Report vulnerabilities privately through GitHub: open this repository's **Security** tab and choose **Report a vulnerability**. Do not open a public issue or pull request for a security problem.
 
-Use this section to tell people how to report a vulnerability.
+Include what you found, how to reproduce it, and what an attacker could do with it. Never include real health data, device tokens or other secrets in a report.
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+This is a single-maintainer project, so reports are handled on a best-effort basis with no guaranteed response time.
+
+## Scope
+
+This policy covers the code in this repository. Each HealthSyncy instance is deployed and operated by its own owner, who is responsible for that deployment's configuration, credentials and data.
