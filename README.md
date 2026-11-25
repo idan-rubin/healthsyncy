@@ -1,10 +1,10 @@
-<img src="docs/app-icon.png" width="72" height="72" alt="">
+![With sync enabled, daily activity totals go from your iPhone to your server, where an authorized MCP client can read them.](docs/banner.svg)
 
 # HealthSyncy
 
 **Share today’s Apple Health activity. Ask about your week.**
 
-Copy your daily totals straight from your iPhone, or connect ChatGPT to a read-only MCP server you host. You choose which Health categories the companion can read.
+Copy your daily totals straight from your iPhone, or let ChatGPT read them through a Model Context Protocol (MCP) server you host. You choose which Apple Health categories to share.
 
 With my food log in the chat, I can ask “How does today’s calorie intake compare with what I’ve burned so far?” HealthSyncy supplies my active and resting calories from Apple Health. I wrote about trading daily screenshots for that conversation in [AI, Meet Apple Health](https://mrrubin.substack.com/p/ai-meet-apple-health).
 
@@ -24,7 +24,7 @@ Stand: 9 h
 
 ## Ask about your week
 
-“Which day did I walk the most this week?” With the server connected, ChatGPT can look up daily totals through the Model Context Protocol (MCP). Results include capture times so you can tell how recent they are. Each sync refreshes today and the previous six days. iOS controls when background updates run.
+“Which day did I walk the most this week?” With the server connected, ChatGPT can look up daily totals through the read-only MCP connector. Results include capture times so you can tell how recent they are. Each sync refreshes today and the previous six days. iOS controls when background updates run.
 
 1. [Deploy the three services and MongoDB](docs/self-hosting.md). You’ll need a K3s cluster, public HTTPS and an OpenID Connect provider. Each instance serves one person.
 2. [Pair your iPhone](docs/iphone.md#pair-with-your-server) and check the first upload against Apple Health.
@@ -47,7 +47,9 @@ The companion can read steps, active and resting energy, exercise minutes, stand
 
 ## Why C#?
 
-I chose C# because I love it. Here it runs on both sides of the sync, from reading HealthKit on the iPhone to answering MCP calls on the server. The repository doubles as a C# case study. [How the code is organised](docs/architecture.md#how-the-code-is-organised) shows where each pattern and language feature lives.
+I chose C# because I love it. HealthSyncy uses **C# 15 and .NET 11** on both sides of the sync. The iPhone app uses .NET for iOS, UIKit and HealthKit. On the server, ASP.NET Core accepts daily totals, MongoDB stores them, and the MCP C# SDK makes them available to authorized clients.
+
+[How the code is organised](docs/architecture.md#how-the-code-is-organised) shows where each pattern and language feature lives.
 
 ## Project guides
 
