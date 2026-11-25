@@ -124,12 +124,36 @@ public sealed class AdminPortalTests : IDisposable
     public async Task Turns_away_an_account_that_is_not_the_administrator()
     {
         using var rejected = await SignInAsync("someone-else");
+        using var denied = await _client.GetAsync(rejected.Headers.Location, Cancellation);
         using var retry = await _client.GetAsync(_root, Cancellation);
 
-        rejected.IsSuccessStatusCode.Should().BeFalse();
+        rejected.StatusCode.Should().Be(HttpStatusCode.Redirect);
+        rejected.Headers.Location.Should().Be(new Uri("/denied", UriKind.Relative));
+        SessionCookies(rejected).Should().BeEmpty();
+        denied.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await denied.Content.ReadAsStringAsync(Cancellation)).Should()
+            .Contain("<title>Access denied · HealthSyncy</title>")
+            .And.Contain("This account is not the HealthSyncy administrator.");
         retry.StatusCode.Should().Be(HttpStatusCode.Redirect);
         retry.Headers.Location!.GetLeftPart(UriPartial.Path).Should().Be(AuthorizeEndpoint);
         _admin.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task Explains_a_sign_in_the_identity_provider_did_not_finish()
+    {
+        using var challenge = await _client.GetAsync(_root, Cancellation);
+
+        using var failed = await SubmitAsync("/signin-oidc", ("code", "authorization-code"), ("state", "tampered"));
+        using var page = await _client.GetAsync(failed.Headers.Location, Cancellation);
+
+        failed.StatusCode.Should().Be(HttpStatusCode.Redirect);
+        failed.Headers.Location.Should().Be(new Uri("/denied?failed=true", UriKind.Relative));
+        SessionCookies(failed).Should().BeEmpty();
+        page.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await page.Content.ReadAsStringAsync(Cancellation)).Should()
+            .Contain("<h1>Sign-in did not finish</h1>")
+            .And.Contain("""<a href="/">Try again</a>""");
     }
 
     [Fact]
@@ -188,7 +212,7 @@ public sealed class AdminPortalTests : IDisposable
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         (await response.Content.ReadAsStringAsync(Cancellation)).Should()
-            .Contain("The field StaleAfterMinutes must be between 15 and 1440.");
+            .Contain("Choose an alert window between 15 and 1440 minutes.");
         _admin.Verify(admin => admin.SaveSettingsAsync(It.IsAny<SyncSettings>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
@@ -228,6 +252,17 @@ public sealed class AdminPortalTests : IDisposable
     }
 
     [Fact]
+    public void Refuses_to_start_with_a_reporting_zone_that_is_not_an_IANA_zone()
+    {
+        using var misconfigured = _factory.WithWebHostBuilder(host => host.UseSetting("ReportingZone", "America/NewYork"));
+
+        var start = () => misconfigured.CreateClient();
+
+        start.Should().Throw<OptionsValidationException>()
+            .WithMessage("*ReportingZone needs an IANA time zone, such as America/New_York.*");
+    }
+
+    [Fact]
     public void Refuses_to_start_with_a_public_origin_that_is_not_HTTPS()
     {
         using var misconfigured = _factory.WithWebHostBuilder(host => host.UseSetting("AdminOrigin", "http://admin.test"));
@@ -260,6 +295,11 @@ public sealed class AdminPortalTests : IDisposable
             SigningCredentials = new(_signingKey, SecurityAlgorithms.HmacSha256),
             Claims = new Dictionary<string, object>(StringComparer.Ordinal) { ["sub"] = subject, ["nonce"] = nonce }
         });
+
+    private static IEnumerable<string> SessionCookies(HttpResponseMessage response) =>
+        response.Headers.TryGetValues("Set-Cookie", out var cookies)
+            ? cookies.Where(cookie => cookie.StartsWith("__Host-healthsyncy=", StringComparison.Ordinal))
+            : [];
 
     private static string AntiforgeryToken(string page)
     {

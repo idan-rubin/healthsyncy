@@ -17,7 +17,7 @@ public sealed class IndexModel(IAdminService admin, IOptions<AdminOptions> optio
     [BindProperty]
     public bool Enabled { get; set; }
 
-    [BindProperty, Range(15, 1440)]
+    [BindProperty, Range(15, 1440, ErrorMessage = "Choose an alert window between 15 and 1440 minutes.")]
     public int StaleAfterMinutes { get; set; }
 
     public string Zone { get; } = options.Value.ReportingZone;

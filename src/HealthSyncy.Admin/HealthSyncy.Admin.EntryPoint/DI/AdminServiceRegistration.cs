@@ -19,7 +19,9 @@ internal static class AdminServiceRegistration
             _ = services.AddHealthSyncyInfrastructure(config).AddAdminDomain();
             _ = services.AddOptions<AdminOptions>().Bind(config).ValidateDataAnnotations().ValidateOnStart();
             _ = services.AddAuthorization();
-            _ = services.AddRazorPages(pages => pages.Conventions.AuthorizeFolder("/"));
+            _ = services.AddRazorPages(pages => pages.Conventions
+                .AuthorizeFolder("/")
+                .AllowAnonymousToPage("/Denied"));
             return services.AddKeyStorage().AddOwnerSignIn();
         }
 
@@ -73,7 +75,16 @@ internal static class AdminServiceRegistration
                     {
                         var subject = context.Principal?.FindFirst("sub")?.Value;
                         if (!string.Equals(subject, admin.AdminSubject, StringComparison.Ordinal))
-                            context.Fail("Account is not an administrator.");
+                        {
+                            context.Response.Redirect("/denied");
+                            context.HandleResponse();
+                        }
+                        return Task.CompletedTask;
+                    };
+                    oidc.Events.OnRemoteFailure = context =>
+                    {
+                        context.Response.Redirect("/denied?failed=true");
+                        context.HandleResponse();
                         return Task.CompletedTask;
                     };
                 });

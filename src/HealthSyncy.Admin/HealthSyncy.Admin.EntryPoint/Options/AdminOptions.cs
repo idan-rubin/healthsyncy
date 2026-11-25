@@ -11,7 +11,7 @@ public sealed record AdminOptions
     [Required] public string AdminClientId { get; init; } = "";
     [Required] public string AdminClientSecret { get; init; } = "";
     [Required] public string KeyDirectory { get; init; } = "/var/lib/healthsyncy/keys";
-    [Required] public string ReportingZone { get; init; } = "UTC";
+    [Required, IanaTimeZone] public string ReportingZone { get; init; } = "UTC";
 
     public string SignInCallback => AdminOrigin.TrimEnd('/') + "/signin-oidc";
 }
