@@ -1,3 +1,5 @@
+using HealthSyncy.BL;
+using HealthSyncy.BL.DI;
 using HealthSyncy.Core;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -5,7 +7,7 @@ using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
 var cfg = builder.Configuration;
-builder.Services.AddActivityStore(cfg);
+builder.Services.AddBL(cfg);
 var issuer = cfg.Https("OAuthIssuer");
 var origin = cfg.Https("AdminOrigin").TrimEnd('/');
 var owner = cfg.Required("AdminSubject");
@@ -61,9 +63,9 @@ app.Use(async (ctx, next) =>
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapGet("/readyz", async (ActivityStore store, CancellationToken ct) =>
+app.MapGet("/readyz", async (ActivityBL activity, CancellationToken ct) =>
 {
-    await store.Ping(ct);
+    await activity.Ready(ct);
     return Results.NoContent();
 });
 app.MapGet("/healthz", () => Results.NoContent());

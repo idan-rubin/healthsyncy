@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations;
+using HealthSyncy.BL;
 using HealthSyncy.Core;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace HealthSyncy.Admin.Pages;
 
-public sealed class IndexModel(ActivityStore store, IConfiguration config) : PageModel
+public sealed class IndexModel(ActivityBL activity, IConfiguration config) : PageModel
 {
     [BindProperty] public bool Enabled { get; set; }
     [BindProperty, Range(15, 1440)] public int StaleAfterMinutes { get; set; }
@@ -17,20 +18,23 @@ public sealed class IndexModel(ActivityStore store, IConfiguration config) : Pag
 
     public async Task OnGetAsync(CancellationToken ct)
     {
-        var settings = await store.Settings(ct);
-        Enabled = settings.Enabled;
-        StaleAfterMinutes = settings.StaleAfterMinutes;
-        var localNow = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTimeOffset.UtcNow, Zone);
-        Days = await store.Week(DateOnly.FromDateTime(localNow.DateTime), Zone, ct);
-        Status = !Enabled ? "Uploads paused" : Today is null ? "Awaiting today’s snapshot" :
-            DateTime.UtcNow - Today.CapturedAtUtc > TimeSpan.FromMinutes(StaleAfterMinutes) ?
-            "Snapshot is stale" : "Sync current";
+        var overview = await activity.Overview(Zone, ct);
+        Enabled = overview.Settings.Enabled;
+        StaleAfterMinutes = overview.Settings.StaleAfterMinutes;
+        Days = overview.Days;
+        Status = overview.Status switch
+        {
+            SyncStatus.Paused => "Uploads paused",
+            SyncStatus.AwaitingToday => "Awaiting today’s snapshot",
+            SyncStatus.Stale => "Snapshot is stale",
+            _ => "Sync current"
+        };
     }
 
     public async Task<IActionResult> OnPostAsync(CancellationToken ct)
     {
         if (!ModelState.IsValid) { await OnGetAsync(ct); return Page(); }
-        await store.SetSettings(new(Enabled, StaleAfterMinutes), ct);
+        await activity.SaveSettings(new(Enabled, StaleAfterMinutes), ct);
         return RedirectToPage();
     }
 }

@@ -1,4 +1,6 @@
 using System.ComponentModel;
+using HealthSyncy.BL;
+using HealthSyncy.BL.DI;
 using HealthSyncy.Core;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -7,7 +9,7 @@ using ModelContextProtocol.Server;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
-builder.Services.AddActivityStore(builder.Configuration);
+builder.Services.AddBL(builder.Configuration);
 var issuer = builder.Configuration.Https("OAuthIssuer");
 var resource = builder.Configuration.Https("McpResource");
 var owner = builder.Configuration.Required("OwnerSubject");
@@ -38,9 +40,9 @@ app.Use(async (context, next) =>
 });
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapGet("/readyz", async (ActivityStore store, CancellationToken ct) =>
+app.MapGet("/readyz", async (ActivityBL activity, CancellationToken ct) =>
 {
-    await store.Ping(ct);
+    await activity.Ready(ct);
     return Results.NoContent();
 });
 app.MapGet("/healthz", () => Results.NoContent());
@@ -54,13 +56,13 @@ app.MapMcp("/mcp").RequireAuthorization("summary");
 app.Run();
 
 [McpServerToolType]
-public sealed class ActivityTools(ActivityStore store)
+public sealed class ActivityTools(ActivityBL activity)
 {
     [McpServerTool(Name = "get_activity_day", ReadOnly = true), Description("Read one local day's activity totals and capture and receipt times in UTC. Missing metrics are unknown.")]
     public async Task<DayRow> Day(string day, string timeZone, CancellationToken ct)
     {
         Validate(day, timeZone);
-        return new(day, await store.Get(day, timeZone, ct));
+        return new(day, await activity.Day(day, timeZone, ct));
     }
 
     [McpServerTool(Name = "get_activity_week", ReadOnly = true), Description("Read the seven local calendar days ending on the requested date. Missing days have a null snapshot.")]
@@ -69,7 +71,7 @@ public sealed class ActivityTools(ActivityStore store)
         Validate(endingOn, timeZone);
         var end = DateOnly.ParseExact(endingOn, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
         if (end.DayNumber < 6) throw new McpException("Date is outside the reporting range.");
-        return await store.Week(end, timeZone, ct);
+        return await activity.Week(end, timeZone, ct);
     }
 
     private static void Validate(string day, string zone)
