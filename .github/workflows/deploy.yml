@@ -43,6 +43,10 @@ jobs:
           build-args: SERVICE=${{ matrix.service }}
           tags: ghcr.io/${{ github.repository }}/${{ matrix.image }}:${{ github.sha }}
           labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+      - name: Verify shipped project license
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}/${{ matrix.image }}:${{ github.sha }}
+        run: docker run --rm --entrypoint cat "$IMAGE" /app/LICENSE | cmp LICENSE -
   deploy:
     needs: publish
     if: github.event_name == 'workflow_dispatch' && inputs.deploy && github.ref == 'refs/heads/main'

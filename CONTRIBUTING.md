@@ -18,7 +18,9 @@ checks/mongo.sh
 python3 checks/manifests.py
 ```
 
-The same commands run on every pull request. The iPhone companion builds separately on macOS with Xcode and the .NET iOS workload; the exact steps are in `.github/workflows/ci.yml`.
+On macOS, the integration script runs the .NET services and temporary OAuth issuer in a Linux test container. Docker must be running. The fixture needs no changes to your Mac’s trusted certificates. On Linux, use `checks/mongo.sh --container` to exercise the same path.
+
+Pull requests run the build, containerized integration suite, and manifest checks. The iPhone companion builds separately on macOS with Xcode and the .NET iOS workload; the exact steps are in `.github/workflows/ci.yml`.
 
 ## Pull requests
 

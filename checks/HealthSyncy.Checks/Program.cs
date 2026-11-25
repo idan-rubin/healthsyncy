@@ -14,6 +14,36 @@ await Task.WhenAll(registration.Ensure(metrics, Enable), registration.Ensure(met
 Verify(attempts.SequenceEqual(["steps", "energy", "energy"]), "retry only failed registrations");
 Verify((await registration.Ensure(metrics, Enable)).Count == 0, "registration recovered");
 
+var queue = new SyncQueue();
+var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+var finish = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+int passes = 0;
+async Task Refresh()
+{
+    if (Interlocked.Increment(ref passes) == 1)
+    {
+        started.SetResult();
+        await finish.Task;
+    }
+}
+var active = queue.Refresh(Refresh);
+await started.Task;
+var next = queue.Refresh(Refresh);
+var joined = queue.Refresh(Refresh);
+Verify(next == joined && !next.IsCompleted && passes == 1, "overlapping observers await one pending refresh");
+finish.SetResult();
+await Task.WhenAll(active, next, joined);
+Verify(passes == 2, "refresh arriving during an upload triggers a second read");
+
+var saved = "original";
+try { await queue.Pair(() => Task.FromException<int>(new HttpRequestException("401")), () => saved = "rejected"); }
+catch (HttpRequestException) { }
+try { await queue.Pair(() => Task.FromResult(0), () => saved = "unverified"); }
+catch (InvalidOperationException) { }
+Verify(saved == "original", "failed or empty uploads preserve the working pairing");
+await queue.Pair(() => Task.FromResult(1), () => saved = "accepted");
+Verify(saved == "accepted", "accepted upload commits the replacement pairing");
+
 var client = new MongoClient(Environment.GetEnvironmentVariable("TEST_MONGO_URI")
     ?? throw new InvalidOperationException("Set TEST_MONGO_URI to a disposable local MongoDB instance."));
 var dbName = "healthsyncy_checks_" + Guid.NewGuid().ToString("N");

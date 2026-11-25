@@ -10,5 +10,6 @@ ARG SERVICE
 ENV SERVICE=$SERVICE ASPNETCORE_HTTP_PORTS=8080
 WORKDIR /app
 COPY --from=build /out .
+COPY LICENSE ./LICENSE
 USER $APP_UID
 ENTRYPOINT ["/bin/sh","-c","exec dotnet HealthSyncy.${SERVICE}.EntryPoint.dll"]

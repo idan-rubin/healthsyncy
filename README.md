@@ -62,6 +62,8 @@ checks/mongo.sh
 python3 checks/manifests.py
 ```
 
+On macOS, the integration script runs the .NET services and temporary OAuth issuer in a Linux test container. Docker must be running. The fixture needs no changes to your Mac’s trusted certificates. On Linux, use `checks/mongo.sh --container` to exercise the same path.
+
 The storage checks cover conflicting concurrent updates, replays, corrections, missing days, and settings. The HTTP suite starts the three services and a temporary loopback-only OAuth issuer. It checks writes, OAuth scope, owner, expiration, audience, MCP discovery and tool calls. It uses generated keys and synthetic metrics. The iOS build runs separately on macOS.
 
 ## Deploy to Kubernetes
@@ -97,7 +99,7 @@ dotnet build HealthSyncy.iOS/HealthSyncy.iOS.csproj -c Debug -r ios-arm64 -t:Run
   -p:CodesignProvision="<your provisioning profile>"
 ```
 
-On your iPhone, enter `https://sync.<domain>` and the generated device token. Tap **Pair and sync**, approve the Health categories you want to share, then compare the first snapshot with Apple Health for the same day and time zone. Check an unlocked-device sync, a delayed sync after locking, and a reconnect after going offline before relying on automatic updates. The simulator can build the app. Background HealthKit delivery needs a physical device. [Apple’s observer-query documentation](https://developer.apple.com/documentation/healthkit/hkobserverquery).
+On your iPhone, enter `https://sync.<domain>` and the generated device token. Tap **Pair and sync**, approve the Health categories you want to share, then compare the first snapshot with Apple Health for the same day and time zone. A replacement pairing is saved after a sync uploads at least one readable day. If verification fails, the previous pairing stays active. Check an unlocked-device sync, a delayed sync after locking, and a reconnect after going offline before relying on automatic updates. The simulator can build the app. Background HealthKit delivery needs a physical device. [Apple’s observer-query documentation](https://developer.apple.com/documentation/healthkit/hkobserverquery).
 
 ### Connect ChatGPT
 
