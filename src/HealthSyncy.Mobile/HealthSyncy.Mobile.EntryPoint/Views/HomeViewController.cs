@@ -199,6 +199,7 @@ internal sealed class HomeViewController : UIViewController
         _stand.Show(activity.Stand);
         _burn.Text = MetricTile.Amount(activity.Burn);
         _burnParts.Text = $"{MetricTile.Count(activity.Active)} active + {MetricTile.Count(activity.Resting)} resting";
+        _burnParts.Hidden = activity.Active.Value is null && activity.Resting.Value is null;
     }
 
     private async Task RegisterBackgroundAsync()
