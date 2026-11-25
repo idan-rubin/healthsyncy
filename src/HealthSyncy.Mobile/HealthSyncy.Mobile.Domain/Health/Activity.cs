@@ -8,7 +8,7 @@ public sealed record Activity(Metric Steps, Metric Active, Metric Exercise, Metr
 
     public Metric Burn => new("Burn so far", Active.Value + Resting.Value, "kcal");
 
-    public IReadOnlyList<Metric> Metrics => [Steps, Active, Resting, Exercise, Stand];
+    public IReadOnlyList<Metric> Metrics => [Steps, Active, Resting, Burn, Exercise, Stand];
 
     public static Activity Of(DailyTotals totals) => new(
         new("Steps", totals.Steps, ""),
