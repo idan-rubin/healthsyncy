@@ -22,6 +22,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+      - run: python3 checks/test_changes.py
       - id: select
         env:
           GH_TOKEN: ${{ github.token }}

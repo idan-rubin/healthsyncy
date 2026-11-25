@@ -7,7 +7,7 @@ SELECTION = (".github/workflows/ci.yml", "checks/changes.py")
 
 AREAS = {
     "backend": BUILD + SELECTION + (
-        "src/", "tests/", "checks/", "scripts/", "deploy/", "HealthSyncy.slnx", "global.json"),
+        "src/", "tests/", "checks/", "scripts/", "deploy/", "HealthSyncy.slnx", "global.json", ".dockerignore"),
     "ios": BUILD + SELECTION + (
         "src/HealthSyncy.Mobile/",
         "src/HealthSyncy.Sync/HealthSyncy.Sync.Contracts/",
@@ -23,8 +23,8 @@ OUTSIDE = {"backend": ("src/HealthSyncy.Mobile/HealthSyncy.Mobile.EntryPoint/",)
 def changed(base):
     if not base or set(base) == {"0"}:
         return None
-    diff = subprocess.run(["git", "diff", "--name-only", base, "HEAD"], capture_output=True, text=True)
-    return diff.stdout.splitlines() if diff.returncode == 0 else None
+    diff = subprocess.run(["git", "diff", "--no-renames", "--name-only", "-z", base, "HEAD"], capture_output=True)
+    return os.fsdecode(diff.stdout).split("\0")[:-1] if diff.returncode == 0 else None
 
 
 def needs(area, files):
@@ -43,25 +43,28 @@ def github(path):
 
 def last_deployed():
     repository = os.environ["GITHUB_REPOSITORY"]
-    for deployment in github(f"repos/{repository}/deployments?environment=production&per_page=30"):
-        statuses = github(f"repos/{repository}/deployments/{deployment['id']}/statuses")
-        if any(status["state"] == "success" for status in statuses):
-            return deployment["sha"]
-    return None
+    deployments = github(f"repos/{repository}/deployments?environment=production&per_page=1")
+    if not deployments:
+        return None
+    latest = deployments[0]
+    statuses = github(f"repos/{repository}/deployments/{latest['id']}/statuses?per_page=1")
+    return latest["sha"] if statuses and statuses[0]["state"] == "success" else None
 
 
-event = os.environ["GITHUB_EVENT_NAME"]
-if event == "pull_request":
-    proposed = changed("HEAD^1")
-    selected = {area: needs(area, proposed) for area in AREAS}
-elif event == "push":
-    pushed = changed(os.environ.get("PUSH_BEFORE"))
-    services = needs("services", changed(last_deployed()))
-    selected = {"backend": services or needs("backend", pushed), "ios": needs("ios", pushed), "services": services}
-else:
-    selected = dict.fromkeys(AREAS, True)
+def select(event, before=None):
+    if event == "pull_request":
+        proposed = changed("HEAD^1")
+        return {area: needs(area, proposed) for area in AREAS}
+    if event == "push":
+        pushed = changed(before)
+        services = needs("services", pushed) or needs("services", changed(last_deployed()))
+        return {"backend": services or needs("backend", pushed), "ios": needs("ios", pushed), "services": services}
+    return dict.fromkeys(AREAS, True)
 
-with open(os.environ.get("GITHUB_OUTPUT", os.devnull), "a", encoding="utf-8") as output:
-    for area, needed in selected.items():
-        output.write(f"{area}={str(needed).lower()}\n")
-        print(f"{area}: {'runs' if needed else 'skipped'}")
+
+if __name__ == "__main__":
+    selected = select(os.environ["GITHUB_EVENT_NAME"], os.environ.get("PUSH_BEFORE"))
+    with open(os.environ.get("GITHUB_OUTPUT", os.devnull), "a", encoding="utf-8") as output:
+        for area, needed in selected.items():
+            output.write(f"{area}={str(needed).lower()}\n")
+            print(f"{area}: {'runs' if needed else 'skipped'}")
