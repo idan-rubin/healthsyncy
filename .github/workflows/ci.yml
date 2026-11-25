@@ -15,6 +15,13 @@ jobs:
           dotnet-version: 11.0.x
       - run: dotnet restore HealthSyncy.slnx
       - run: dotnet build HealthSyncy.slnx -c Release --no-restore
+      - name: Check the rule set
+        run: |
+          cp .editorconfig.ci .editorconfig
+          dotnet format HealthSyncy.slnx --verify-no-changes --no-restore
+          git checkout .editorconfig
+      - run: dotnet test --solution HealthSyncy.slnx -c Release --no-build --coverage --coverage-output-format cobertura --results-directory "$GITHUB_WORKSPACE/TestResults"
+      - run: python3 checks/coverage.py TestResults 90
       - run: checks/mongo.sh --container
       - run: python3 checks/manifests.py
   ios:
@@ -22,7 +29,7 @@ jobs:
     timeout-minutes: 35
     defaults:
       run:
-        working-directory: mobile
+        working-directory: src/HealthSyncy.Mobile
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v6
@@ -30,21 +37,26 @@ jobs:
           dotnet-version: 11.0.100
       - run: sudo xcode-select --switch /Applications/Xcode_27.2.app/Contents/Developer
       - run: dotnet workload install ios --version 11.0.100.1
-      - run: dotnet build HealthSyncy.iOS -c Release -r iossimulator-arm64 -p:EnableCodeSigning=true -p:CodesignKey=- -p:CodesignEntitlements=DeviceEntitlements.plist -p:CodesignRequireProvisioningProfile=false
+      - run: dotnet build HealthSyncy.Mobile.EntryPoint -c Release -r iossimulator-arm64 -p:EnableCodeSigning=true -p:CodesignKey=- -p:CodesignEntitlements=DeviceEntitlements.plist -p:CodesignRequireProvisioningProfile=false
+      - name: Check the rule set
+        run: |
+          cp ../../.editorconfig.ci ../../.editorconfig
+          dotnet format HealthSyncy.Mobile.EntryPoint --verify-no-changes
+          git checkout ../../.editorconfig
       - name: Install and launch the iPhone companion
         shell: bash
         run: |
           set -euo pipefail
           device=$(xcrun simctl create HealthSyncy-CI com.apple.CoreSimulator.SimDeviceType.iPhone-17 com.apple.CoreSimulator.SimRuntime.iOS-27-2)
           xcrun simctl bootstatus "$device" -b
-          app=$(find HealthSyncy.iOS/bin/Release/net11.0-ios/iossimulator-arm64 -maxdepth 1 -name '*.app' -print -quit)
+          app=$(find HealthSyncy.Mobile.EntryPoint/bin/Release/net11.0-ios/iossimulator-arm64 -maxdepth 1 -name '*.app' -print -quit)
           bundle=$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$app/Info.plist")
           codesign --verify --deep --strict "$app"
           xcrun simctl install "$device" "$app"
           report() {
             cat "$RUNNER_TEMP"/companion.{err,out} 2>/dev/null || true
             find "$HOME/Library/Logs/DiagnosticReports" -iname '*HealthSyncy*.ips' -exec head -c 24000 {} + || true
-            xcrun simctl spawn "$device" log show --last 5m --style compact --predicate 'process == "HealthSyncy.iOS" OR (eventMessage CONTAINS[c] "org.healthsyncy.companion" AND messageType == error)' | tail -70 || true
+            xcrun simctl spawn "$device" log show --last 5m --style compact --predicate 'process == "HealthSyncy.Mobile.EntryPoint" OR (eventMessage CONTAINS[c] "org.healthsyncy.companion" AND messageType == error)' | tail -70 || true
           }
           diagnose() {
             report

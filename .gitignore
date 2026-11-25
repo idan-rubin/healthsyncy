@@ -9,3 +9,4 @@ secrets/
 *.p12
 *.mobileprovision
 __pycache__/
+TestResults/

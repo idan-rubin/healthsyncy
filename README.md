@@ -1,4 +1,4 @@
-<img src="mobile/HealthSyncy.iOS/Assets.xcassets/AppIcon.appiconset/AppIcon.png" width="72" height="72" alt="">
+<img src="src/HealthSyncy.Mobile/HealthSyncy.Mobile.EntryPoint/Assets.xcassets/AppIcon.appiconset/AppIcon.png" width="72" height="72" alt="">
 
 # HealthSyncy
 
@@ -45,13 +45,13 @@ The companion can read steps, active and resting energy, exercise minutes, stand
 
 ## Why C#?
 
-I chose C# because I love it. Here it runs on both sides of the sync, from reading HealthKit on the iPhone to answering MCP calls on the server.
+I chose C# because I love it. Here it runs on both sides of the sync, from reading HealthKit on the iPhone to answering MCP calls on the server. The repository doubles as a C# case study. [How the code is organised](docs/architecture.md#how-the-code-is-organised) shows where each pattern and language feature lives.
 
 ## Project guides
 
-- [How HealthSyncy works](docs/architecture.md) covers the data flow, API endpoints, missing days and time zones.
+- [How HealthSyncy works](docs/architecture.md) covers the data flow, the code layout, API endpoints, missing days and time zones.
 - [Privacy and operations](docs/self-hosting.md#privacy-and-operations) covers pausing uploads, revoking access and rotating the device token.
-- [Contributing](CONTRIBUTING.md) explains how to build the .NET services and run the tests with synthetic activity.
+- [Contributing](CONTRIBUTING.md) explains how to build the .NET services, run the unit tests and run the integration suite with synthetic activity.
 - [Security policy](SECURITY.md) explains how to report a vulnerability privately.
 
 HealthSyncy is [MIT licensed](LICENSE). MongoDB Community Server uses the [SSPL](https://www.mongodb.com/legal/licensing/server-side-public-license).

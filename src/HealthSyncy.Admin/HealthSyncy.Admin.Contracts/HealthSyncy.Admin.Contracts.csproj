@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../../HealthSyncy.Common/HealthSyncy.Common.Contracts/HealthSyncy.Common.Contracts.csproj" />
+  </ItemGroup>
+</Project>

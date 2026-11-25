@@ -9,7 +9,7 @@ The CI toolchain uses .NET SDK 11.0.100, iOS workload set 11.0.100.1 and Xcode 2
 From the repository root, select Xcode and install the workload.
 
 ```sh
-cd mobile
+cd src/HealthSyncy.Mobile
 export DEVELOPER_DIR=/Applications/Xcode_27.2.app/Contents/Developer
 dotnet workload install ios --version 11.0.100.1
 ```
@@ -17,12 +17,12 @@ dotnet workload install ios --version 11.0.100.1
 Connect your iPhone. Replace the three signing values below with your own, then build and launch the companion.
 
 ```sh
-dotnet build HealthSyncy.iOS/HealthSyncy.iOS.csproj -c Debug -r ios-arm64 -t:Run \
+dotnet build HealthSyncy.Mobile.EntryPoint -c Debug -r ios-arm64 -t:Run \
   -p:ApplicationId="your.bundle.id" -p:CodesignKey="<your signing identity>" \
   -p:CodesignProvision="<your provisioning profile>"
 ```
 
-For a simulator build on Apple silicon, run `dotnet build HealthSyncy.iOS/HealthSyncy.iOS.csproj -c Debug -r iossimulator-arm64`. Test background HealthKit delivery on a physical iPhone.
+For a simulator build on Apple silicon, run `dotnet build HealthSyncy.Mobile.EntryPoint -c Debug -r iossimulator-arm64`. Test background HealthKit delivery on a physical iPhone.
 
 ## Share a summary from your iPhone
 

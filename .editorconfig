@@ -1,0 +1,51 @@
+root = true
+
+# ─── All files ───────────────────────────────────────────────────
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# ─── C# ─────────────────────────────────────────────────────────
+[*.{cs,csx}]
+indent_size = 4
+
+# "Unused / never-instantiated public API" inspections are false positives here:
+# Contracts records (DTOs) are (de)serialized, services are resolved via DI, and members
+# are consumed across service/HTTP boundaries the analyzer can't see. Disabled, NOT deleted.
+# (Private/local "unused" inspections stay ON to catch genuinely dead code.)
+resharper_not_accessed_positional_property_global_highlighting = none
+resharper_unused_member_global_highlighting = none
+resharper_unused_member_in_super_global_highlighting = none
+resharper_unused_auto_property_accessor_global_highlighting = none
+resharper_unused_method_return_value_global_highlighting = none
+resharper_unused_type_global_highlighting = none
+resharper_unused_parameter_global_highlighting = none
+resharper_class_never_instantiated_global_highlighting = none
+
+# ─── Razor Pages code-behind ────────────────────────────────────
+# Index.cshtml.cs holds IndexModel by framework convention.
+[*.cshtml.cs]
+dotnet_diagnostic.MA0048.severity = none
+
+[tests/**.cs]
+dotnet_diagnostic.IDE0058.severity = none   # Fluent assertion chains return a value
+
+# ─── JSON files ──────────────────────────────────────────────────
+[*.json]
+indent_size = 2
+
+# ─── XML / project files ────────────────────────────────────────
+[*.{xml,csproj,props,targets}]
+indent_size = 2
+
+# ─── YAML ────────────────────────────────────────────────────────
+[*.{yml,yaml}]
+indent_size = 2
+
+# ─── Markdown ────────────────────────────────────────────────────
+[*.md]
+trim_trailing_whitespace = false
