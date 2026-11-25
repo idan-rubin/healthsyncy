@@ -4,7 +4,7 @@
 
 **Share today’s Apple Health activity. Ask about your week.**
 
-Built with [C# 15] and [.NET 11], from [.NET for iOS] on the iPhone to [ASP.NET Core] on the server.
+Built with [C# 15] and [.NET 11], from [.NET for iOS] on the iPhone to [ASP.NET Core] on the server. For server sign-in, use [Keycloak] or another OpenID Connect provider.
 
 Copy your daily totals straight from your iPhone, or let ChatGPT read them through a Model Context Protocol (MCP) server you host. You choose which Apple Health categories to share.
 
@@ -59,6 +59,7 @@ I chose C# because I love it. The iPhone app uses [UIKit] for its interface and 
 [UIKit]: https://developer.apple.com/documentation/uikit
 [HealthKit]: https://developer.apple.com/documentation/healthkit
 [ASP.NET Core]: https://learn.microsoft.com/en-us/aspnet/core/overview?view=aspnetcore-11.0
+[Keycloak]: https://www.keycloak.org/securing-apps/oidc-layers
 [MongoDB]: https://www.mongodb.com/docs/manual/
 [MCP C# SDK]: https://csharp.sdk.modelcontextprotocol.io/v2/
 
