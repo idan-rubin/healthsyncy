@@ -40,7 +40,7 @@ app.Use(async (context, next) =>
 });
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapGet("/readyz", async (ActivityBL activity, CancellationToken ct) =>
+app.MapGet("/readyz", async (IActivityBL activity, CancellationToken ct) =>
 {
     await activity.Ready(ct);
     return Results.NoContent();
@@ -56,7 +56,7 @@ app.MapMcp("/mcp").RequireAuthorization("summary");
 app.Run();
 
 [McpServerToolType]
-public sealed class ActivityTools(ActivityBL activity)
+public sealed class ActivityTools(IActivityBL activity)
 {
     [McpServerTool(Name = "get_activity_day", ReadOnly = true), Description("Read one local day's activity totals and capture and receipt times in UTC. Missing metrics are unknown.")]
     public async Task<DayRow> Day(string day, string timeZone, CancellationToken ct)

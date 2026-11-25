@@ -7,5 +7,5 @@ namespace HealthSyncy.BL.DI;
 public static class BLRegistration
 {
     public static IServiceCollection AddBL(this IServiceCollection services, IConfiguration config) =>
-        services.AddActivityStore(config).AddSingleton<ActivityBL>();
+        services.AddActivityStore(config).AddSingleton<IActivityBL, ActivityBL>();
 }

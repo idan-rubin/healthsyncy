@@ -44,7 +44,7 @@ The code has three layers:
 | Business logic | `src/Libraries/HealthSyncy.BL` | The rules: which uploads are accepted, which snapshot wins, what a week is and when a snapshot is stale |
 | Contracts and storage | `src/Libraries/HealthSyncy.Core` | The shared records and the MongoDB reads and writes |
 
-Entry points never call storage. The iOS project links the contract source and uses native HealthKit and UIKit bindings. Each service connects directly to MongoDB.
+Each layer depends on the interface of the one below it: entry points on `IActivityBL`, the business logic on `IActivityStore`. Both are registered through dependency injection. Entry points never call storage. The iOS project links the contract source and uses native HealthKit and UIKit bindings. Each service connects directly to MongoDB.
 
 ## What gets synced
 

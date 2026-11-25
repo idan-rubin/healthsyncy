@@ -7,7 +7,7 @@ namespace HealthSyncy.Connector.EntryPoint.Controllers;
 
 [ApiController, Authorize(Policy = "summary")]
 [Route("api/v1/activity")]
-public sealed class ActivityController(ActivityBL activity) : ControllerBase
+public sealed class ActivityController(IActivityBL activity) : ControllerBase
 {
     [HttpGet("{day}")]
     public async Task<IActionResult> Get(string day, [FromQuery] string timeZone, CancellationToken ct)

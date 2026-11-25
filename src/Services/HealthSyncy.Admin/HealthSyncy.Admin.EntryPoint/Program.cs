@@ -63,7 +63,7 @@ app.Use(async (ctx, next) =>
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapGet("/readyz", async (ActivityBL activity, CancellationToken ct) =>
+app.MapGet("/readyz", async (IActivityBL activity, CancellationToken ct) =>
 {
     await activity.Ready(ct);
     return Results.NoContent();

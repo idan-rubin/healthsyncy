@@ -6,7 +6,7 @@ namespace HealthSyncy.Sync.EntryPoint.Controllers;
 
 [ApiController]
 [Route("api/v1/days")]
-public sealed class DaysController(ActivityBL activity) : ControllerBase
+public sealed class DaysController(IActivityBL activity) : ControllerBase
 {
     [HttpPut("{day}")]
     public async Task<IActionResult> Put(string day, [FromBody] Upload body, CancellationToken ct)

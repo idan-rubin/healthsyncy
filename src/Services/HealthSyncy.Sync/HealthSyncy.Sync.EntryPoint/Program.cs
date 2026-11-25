@@ -25,7 +25,7 @@ app.Use(async (context, next) =>
     }
     await next();
 });
-app.MapGet("/readyz", async (ActivityBL activity, CancellationToken ct) =>
+app.MapGet("/readyz", async (IActivityBL activity, CancellationToken ct) =>
 {
     await activity.Ready(ct);
     return Results.NoContent();

@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace HealthSyncy.Admin.Pages;
 
-public sealed class IndexModel(ActivityBL activity, IConfiguration config) : PageModel
+public sealed class IndexModel(IActivityBL activity, IConfiguration config) : PageModel
 {
     [BindProperty] public bool Enabled { get; set; }
     [BindProperty, Range(15, 1440)] public int StaleAfterMinutes { get; set; }

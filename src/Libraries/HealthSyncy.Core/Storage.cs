@@ -25,12 +25,12 @@ public static class Configuration
         var settings = MongoClientSettings.FromConnectionString(config.Required("MongoUri"));
         settings.ServerSelectionTimeout = TimeSpan.FromSeconds(5);
         var database = new MongoClient(settings).GetDatabase("activity");
-        services.AddSingleton(new ActivityStore(database));
+        services.AddSingleton<IActivityStore>(new ActivityStore(database));
         return services;
     }
 }
 
-public sealed class ActivityStore(IMongoDatabase database)
+public sealed class ActivityStore(IMongoDatabase database) : IActivityStore
 {
     private sealed record SnapshotDocument(
         [property: BsonId] string Id, string Day, string TimeZone, DateTime CapturedAtUtc,

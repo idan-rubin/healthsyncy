@@ -7,7 +7,7 @@ public enum UploadResult { Saved, Duplicate, Superseded, Conflict, Invalid, Paus
 public enum SyncStatus { Current, Paused, AwaitingToday, Stale }
 public sealed record SyncOverview(SyncSettings Settings, IReadOnlyList<DayRow> Days, SyncStatus Status);
 
-public sealed class ActivityBL(ActivityStore store)
+public sealed class ActivityBL(IActivityStore store) : IActivityBL
 {
     public Task Ready(CancellationToken ct) => store.Ping(ct);
 
