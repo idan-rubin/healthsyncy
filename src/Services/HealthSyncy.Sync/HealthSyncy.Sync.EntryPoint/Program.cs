@@ -1,8 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
-using HealthSyncy.Sync.EntryPoint.DI;
 using HealthSyncy.BL;
 using HealthSyncy.Core;
+using HealthSyncy.Sync.EntryPoint.DI;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSync(builder.Configuration);
@@ -25,9 +25,9 @@ app.Use(async (context, next) =>
     }
     await next();
 });
-app.MapGet("/readyz", async (IActivityBL activity, CancellationToken ct) =>
+app.MapGet("/readyz", async (IReadinessBL readiness, CancellationToken ct) =>
 {
-    await activity.Ready(ct);
+    await readiness.Ready(ct);
     return Results.NoContent();
 });
 app.MapGet("/healthz", () => Results.NoContent());

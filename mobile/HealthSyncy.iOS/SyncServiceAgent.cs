@@ -4,7 +4,7 @@ using HealthSyncy.Core;
 
 namespace HealthSyncy.iOS;
 
-internal sealed class SyncServiceAgent
+internal sealed class SyncServiceAgent : ISyncServiceAgent
 {
     private readonly HttpClient http = new(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(15) };
 

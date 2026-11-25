@@ -44,7 +44,21 @@ The code has three layers:
 | Business logic | `src/Libraries/HealthSyncy.BL` | The rules: which uploads are accepted, which snapshot wins, what a week is and when a snapshot is stale |
 | Contracts and storage | `src/Libraries/HealthSyncy.Core` | The shared records and the MongoDB reads and writes |
 
-Each layer depends on the interface of the one below it: entry points on `IActivityBL`, the business logic on `IActivityStore`. Both are registered through dependency injection. Entry points never call storage. The iOS project links the contract source and uses native HealthKit and UIKit bindings. Each service connects directly to MongoDB.
+Each layer depends on interfaces of the one below it, one interface per responsibility:
+
+| Interface | Implementation | Responsibility |
+| --- | --- | --- |
+| `IUploadBL` | `UploadBL` | Accepts or rejects an upload |
+| `IActivityBL` | `ActivityBL` | Reads a day or a week |
+| `IAdminBL` | `AdminBL` | Builds the dashboard overview and saves settings |
+| `IReadinessBL` | `ReadinessBL` | Answers the readiness probe |
+| `ISnapshotStore` | `SnapshotStore` | Reads and writes daily snapshots |
+| `ISettingsStore` | `SettingsStore` | Reads and writes the sync settings |
+| `IStoreProbe` | `StoreProbe` | Pings the database |
+
+The `DI` folder of each project maps its interfaces to their implementations. Entry points never call storage.
+
+The iPhone companion in `mobile/HealthSyncy.iOS` follows the same shape. The app delegate is the entry point. `ISyncBL` and `ISummaryBL` hold the rules, `ISyncServiceAgent` makes the HTTP call to Sync, `IHealthReader` reads HealthKit and `IPairingStore` keeps the pairing in the keychain. `DI/MobileRegistration.cs` maps them.
 
 ## What gets synced
 

@@ -6,12 +6,12 @@ namespace HealthSyncy.Sync.EntryPoint.Controllers;
 
 [ApiController]
 [Route("api/v1/days")]
-public sealed class DaysController(IActivityBL activity) : ControllerBase
+public sealed class DaysController(IUploadBL uploads) : ControllerBase
 {
     [HttpPut("{day}")]
     public async Task<IActionResult> Put(string day, [FromBody] Upload body, CancellationToken ct)
     {
-        var result = Reporting.IsDay(day) ? await activity.Accept(day, body, ct) : UploadResult.Invalid;
+        var result = Reporting.IsDay(day) ? await uploads.Accept(day, body, ct) : UploadResult.Invalid;
         return result switch
         {
             UploadResult.Invalid => BadRequest("Invalid day, zone, timestamp or totals."),

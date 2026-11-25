@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace HealthSyncy.Admin.Pages;
 
-public sealed class IndexModel(IActivityBL activity, IConfiguration config) : PageModel
+public sealed class IndexModel(IAdminBL admin, IConfiguration config) : PageModel
 {
     [BindProperty] public bool Enabled { get; set; }
     [BindProperty, Range(15, 1440)] public int StaleAfterMinutes { get; set; }
@@ -18,7 +18,7 @@ public sealed class IndexModel(IActivityBL activity, IConfiguration config) : Pa
 
     public async Task OnGetAsync(CancellationToken ct)
     {
-        var overview = await activity.Overview(Zone, ct);
+        var overview = await admin.Overview(Zone, ct);
         Enabled = overview.Settings.Enabled;
         StaleAfterMinutes = overview.Settings.StaleAfterMinutes;
         Days = overview.Days;
@@ -34,7 +34,7 @@ public sealed class IndexModel(IActivityBL activity, IConfiguration config) : Pa
     public async Task<IActionResult> OnPostAsync(CancellationToken ct)
     {
         if (!ModelState.IsValid) { await OnGetAsync(ct); return Page(); }
-        await activity.SaveSettings(new(Enabled, StaleAfterMinutes), ct);
+        await admin.SaveSettings(new(Enabled, StaleAfterMinutes), ct);
         return RedirectToPage();
     }
 }
