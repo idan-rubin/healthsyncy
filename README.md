@@ -26,7 +26,7 @@ Stand: 9 h
 
 “Which day did I walk the most this week?” With the server connected, ChatGPT can look up daily totals through the read-only MCP connector. Results include capture times so you can tell how recent they are. Each sync refreshes today and the previous six days. iOS controls when background updates run.
 
-1. [Deploy the three services and MongoDB](docs/self-hosting.md). You’ll need a K3s cluster, public HTTPS and an OpenID Connect provider. Each instance serves one person.
+1. [Deploy the three services and MongoDB](docs/self-hosting.md). You’ll need a [K3s](https://docs.k3s.io/) cluster, public HTTPS and an OpenID Connect provider. Each instance serves one person.
 2. [Pair your iPhone](docs/iphone.md#pair-with-your-server) and check the first upload against Apple Health.
 3. [Connect ChatGPT via OAuth](docs/self-hosting.md#connect-chatgpt) with an account or workspace that supports custom MCP servers.
 
@@ -47,9 +47,18 @@ The companion can read steps, active and resting energy, exercise minutes, stand
 
 ## Why C#?
 
-I chose C# because I love it. HealthSyncy uses **C# 15 and .NET 11** on both sides of the sync. The iPhone app uses .NET for iOS, UIKit and HealthKit. On the server, ASP.NET Core accepts daily totals, MongoDB stores them, and the MCP C# SDK makes them available to authorized clients.
+I chose C# because I love it. HealthSyncy uses [C# 15] and [.NET 11] on both sides of the sync. The iPhone app uses [.NET for iOS], [UIKit] and [HealthKit]. On the server, [ASP.NET Core] accepts daily totals, [MongoDB] stores them, and the [MCP C# SDK] makes them available to authorized clients.
 
 [How the code is organised](docs/architecture.md#how-the-code-is-organised) shows where each pattern and language feature lives.
+
+[C# 15]: https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-15
+[.NET 11]: https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-11/overview
+[.NET for iOS]: https://learn.microsoft.com/en-us/dotnet/ios/
+[UIKit]: https://developer.apple.com/documentation/uikit
+[HealthKit]: https://developer.apple.com/documentation/healthkit
+[ASP.NET Core]: https://learn.microsoft.com/en-us/aspnet/core/overview?view=aspnetcore-11.0
+[MongoDB]: https://www.mongodb.com/docs/manual/
+[MCP C# SDK]: https://csharp.sdk.modelcontextprotocol.io/v2/
 
 ## Project guides
 
