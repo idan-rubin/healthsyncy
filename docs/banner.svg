@@ -21,8 +21,15 @@
   <g transform="translate(180 79)">
     <rect x="-25" y="-38" width="50" height="76" rx="10" fill="none" stroke="#e9edf8" stroke-width="3"/>
     <path d="M-7-31H7M-6 31H6" fill="none" stroke="#9daac5" stroke-width="3" stroke-linecap="round"/>
-    <path d="M0 18C-3 11-16 5-16-5c0-11 13-13 16-4 3-9 16-7 16 4C16 5 3 11 0 18Z" fill="url(#coral)"/>
-    <path d="M-16 1h9l3-4 3 8 4-13 3 9h10" fill="none" stroke="#182139" stroke-width="1.8" stroke-linejoin="round"/>
+    <g id="sync">
+      <path d="M-15.7-3.2A16 16 0 0 1 11.5-11.1" fill="none" stroke="#e9edf8" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M14.5-14 15.7-6.8 8.5-8.2Z" fill="#e9edf8" stroke="#e9edf8" stroke-width="1.2" stroke-linejoin="round"/>
+    </g>
+    <use href="#sync" transform="rotate(180)"/>
+    <g transform="translate(0 -1) scale(.6)">
+      <path d="M0 18C-3 11-16 5-16-5c0-11 13-13 16-4 3-9 16-7 16 4C16 5 3 11 0 18Z" fill="url(#coral)"/>
+      <path d="M-16 1h9l3-4 3 8 4-13 3 9h10" fill="none" stroke="#182139" stroke-width="2.4" stroke-linejoin="round"/>
+    </g>
   </g>
 
   <g transform="translate(480 79)" stroke-width="3">
