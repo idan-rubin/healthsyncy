@@ -30,8 +30,6 @@ public static class Configuration
     }
 }
 
-public enum WriteResult { Saved, Duplicate, Superseded, Conflict }
-
 public sealed class ActivityStore(IMongoDatabase database)
 {
     private sealed record SnapshotDocument(
@@ -47,25 +45,24 @@ public sealed class ActivityStore(IMongoDatabase database)
     public Task Ping(CancellationToken ct) => database.RunCommandAsync<MongoDB.Bson.BsonDocument>(
         new MongoDB.Bson.BsonDocument("ping", 1), cancellationToken: ct);
 
-    public async Task<WriteResult> Save(string day, Upload upload, CancellationToken ct)
+    public async Task<DaySnapshot?> SaveIfNewer(DaySnapshot snapshot, CancellationToken ct)
     {
-        var id = $"{upload.TimeZone}|{day}";
-        var stamp = DateTimeOffset.FromUnixTimeMilliseconds(upload.CapturedAt.ToUnixTimeMilliseconds()).UtcDateTime;
-        var record = new SnapshotDocument(id, day, upload.TimeZone, stamp, DateTime.UtcNow, upload.Totals);
+        var id = $"{snapshot.TimeZone}|{snapshot.Day}";
+        var captured = snapshot.CapturedAtUtc;
+        var record = new SnapshotDocument(id, snapshot.Day, snapshot.TimeZone, captured,
+            snapshot.ReceivedAtUtc, snapshot.Totals);
         while (true)
         {
             try
             {
-                await days.ReplaceOneAsync(d => d.Id == id && d.CapturedAtUtc < stamp,
+                await days.ReplaceOneAsync(d => d.Id == id && d.CapturedAtUtc < captured,
                     record, new ReplaceOptions { IsUpsert = true }, ct);
-                return WriteResult.Saved;
+                return null;
             }
             catch (MongoWriteException error) when (error.WriteError.Category == ServerErrorCategory.DuplicateKey)
             {
                 var current = await days.Find(d => d.Id == id).SingleAsync(ct);
-                if (current.CapturedAtUtc < stamp) continue;
-                if (current.CapturedAtUtc > stamp) return WriteResult.Superseded;
-                return current.Totals == upload.Totals ? WriteResult.Duplicate : WriteResult.Conflict;
+                if (current.CapturedAtUtc >= captured) return current.ToSnapshot();
             }
         }
     }
@@ -73,14 +70,11 @@ public sealed class ActivityStore(IMongoDatabase database)
     public async Task<DaySnapshot?> Get(string day, string zone, CancellationToken ct) =>
         (await days.Find(d => d.Id == zone + "|" + day).SingleOrDefaultAsync(ct))?.ToSnapshot();
 
-    public async Task<IReadOnlyList<DayRow>> Week(DateOnly end, string zone, CancellationToken ct)
+    public async Task<IReadOnlyList<DaySnapshot>> GetMany(IEnumerable<string> dates, string zone, CancellationToken ct)
     {
-        var dates = Enumerable.Range(0, 7).Select(i => end.AddDays(i - 6).ToString("yyyy-MM-dd",
-            System.Globalization.CultureInfo.InvariantCulture)).ToArray();
         var ids = dates.Select(day => $"{zone}|{day}").ToArray();
         var docs = await days.Find(Builders<SnapshotDocument>.Filter.In(d => d.Id, ids)).ToListAsync(ct);
-        var byDay = docs.ToDictionary(d => d.Day);
-        return dates.Select(day => new DayRow(day, byDay.GetValueOrDefault(day)?.ToSnapshot())).ToArray();
+        return docs.Select(d => d.ToSnapshot()).ToArray();
     }
 
     public async Task<SyncSettings> Settings(CancellationToken ct)

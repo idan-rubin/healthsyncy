@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../HealthSyncy.Core/HealthSyncy.Core.csproj" />
+  </ItemGroup>
+</Project>

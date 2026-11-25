@@ -36,7 +36,15 @@ The phone uploads to Sync. An authorized client reads through Connector. Admin u
 | Connector | Answers daily and seven-day queries through MCP and exposes a daily REST endpoint | Reads snapshots only |
 | Admin | Displays activity, capture and receipt times, freshness alerts, and a seven-day history. Lets the owner pause uploads and set the alert threshold | Reads snapshots and manages settings |
 
-The three services live in `src/Services/HealthSyncy.*/HealthSyncy.*.EntryPoint`. The shared contracts and storage code live in `src/Libraries/HealthSyncy.Core`. The iOS project links the contract source and uses native HealthKit and UIKit bindings. Each service connects directly to MongoDB.
+The code has three layers:
+
+| Layer | Location | Holds |
+| --- | --- | --- |
+| Entry points | `src/Services/HealthSyncy.*/HealthSyncy.*.EntryPoint` | Controllers, MCP tools and the admin page. Each one checks its parameters, calls the business logic and maps the result to a response |
+| Business logic | `src/Libraries/HealthSyncy.BL` | The rules: which uploads are accepted, which snapshot wins, what a week is and when a snapshot is stale |
+| Contracts and storage | `src/Libraries/HealthSyncy.Core` | The shared records and the MongoDB reads and writes |
+
+Entry points never call storage. The iOS project links the contract source and uses native HealthKit and UIKit bindings. Each service connects directly to MongoDB.
 
 ## What gets synced
 

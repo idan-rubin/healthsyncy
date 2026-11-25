@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="src/Libraries/HealthSyncy.Core/HealthSyncy.Core.csproj" />
+  <Project Path="src/Libraries/HealthSyncy.BL/HealthSyncy.BL.csproj" />
   <Project Path="src/Services/HealthSyncy.Sync/HealthSyncy.Sync.EntryPoint/HealthSyncy.Sync.EntryPoint.csproj" />
   <Project Path="src/Services/HealthSyncy.Connector/HealthSyncy.Connector.EntryPoint/HealthSyncy.Connector.EntryPoint.csproj" />
   <Project Path="src/Services/HealthSyncy.Admin/HealthSyncy.Admin.EntryPoint/HealthSyncy.Admin.EntryPoint.csproj" />
