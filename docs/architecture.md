@@ -51,7 +51,7 @@ The repository is also a C# case study, so the layout is deliberate. Each domain
 | `Sync` | `DaysController` takes uploads from the phone | `IUploadService` decides whether an upload is saved, a duplicate, superseded, conflicting, rejected or paused |
 | `Connector` | `ActivityController`, `MetadataController` and the MCP `ActivityTools` | `IActivityService` reads a day or a week |
 | `Admin` | The Razor page `Pages/Index` | `IAdminService` builds the overview and saves settings |
-| `Mobile` | `AppDelegate` on the iPhone | `ISyncService` and `ISummaryService` hold the rules. `ISyncServiceAgent` makes the HTTP call to Sync. The app implements `IHealthReader` with HealthKit and `IPairingRepository` with the keychain |
+| `Mobile` | `AppDelegate` and its `HomeViewController` on the iPhone | `ISyncService` and `ISummaryService` hold the rules. `ISyncServiceAgent` makes the HTTP call to Sync. The app implements `IHealthReader` with HealthKit and `IPairingRepository` with the keychain |
 | `Common` | None | `Common.Contracts` holds the shared records. `Common.Infrastructure` holds the repository, the MongoDB health check and option validation |
 
 `Common` is split in two so the phone can share the records without referencing MongoDB or ASP.NET Core.

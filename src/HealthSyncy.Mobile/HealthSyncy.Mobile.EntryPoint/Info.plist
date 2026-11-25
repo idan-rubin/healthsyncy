@@ -4,7 +4,7 @@
 <key>UISupportedInterfaceOrientations</key><array><string>UIInterfaceOrientationPortrait</string><string>UIInterfaceOrientationLandscapeLeft</string><string>UIInterfaceOrientationLandscapeRight</string></array>
 <key>UILaunchScreen</key><dict/>
 <key>XSAppIconAssets</key><string>Assets.xcassets/AppIcon.appiconset</string>
-<key>NSHealthShareUsageDescription</key><string>Send daily steps, active and resting calories and Activity ring totals to your HealthSyncy server.</string>
+<key>NSHealthShareUsageDescription</key><string>HealthSyncy shows today’s steps, active and resting energy and Activity ring totals, lets you share them as text, and sends them to your own server if you connect one.</string>
 <key>UIApplicationSceneManifest</key>
 <dict><key>UIApplicationSupportsMultipleScenes</key><false/>
 <key>UISceneConfigurations</key><dict><key>UIWindowSceneSessionRoleApplication</key><array>

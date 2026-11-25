@@ -47,6 +47,18 @@ public sealed class SummaryServiceTests
     }
 
     [Fact]
+    public async Task Reads_todays_activity_for_the_home_screen()
+    {
+        var totals = new DailyTotals(7240, 386, 1650, 32, 9, 500, 30, 12);
+        Reader.Setup(reader => reader.ReadAsync(new DateOnly(2026, 11, 1), _newYork)).ReturnsAsync(totals);
+
+        var activity = await _service.ReadTodayAsync();
+
+        activity.Should().Be(Activity.Of(totals));
+        Reader.Verify(reader => reader.AuthorizeAsync(), Times.Once);
+    }
+
+    [Fact]
     public async Task Says_so_when_nothing_is_readable_yet()
     {
         Reader.Setup(reader => reader.ReadAsync(It.IsAny<DateOnly>(), _newYork))
