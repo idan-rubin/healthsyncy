@@ -13,13 +13,11 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 11.0.x
+      - name: Enable strict analyzer rules
+        run: cp .editorconfig.ci .editorconfig
       - run: dotnet restore HealthSyncy.slnx
       - run: dotnet build HealthSyncy.slnx -c Release --no-restore
-      - name: Check the rule set
-        run: |
-          cp .editorconfig.ci .editorconfig
-          dotnet format HealthSyncy.slnx --verify-no-changes --no-restore
-          git checkout .editorconfig
+      - run: dotnet format HealthSyncy.slnx --verify-no-changes --no-restore
       - run: dotnet test --solution HealthSyncy.slnx -c Release --no-build --coverage --coverage-output-format cobertura --results-directory "$GITHUB_WORKSPACE/TestResults"
       - run: python3 checks/coverage.py TestResults 90
       - run: checks/mongo.sh --container
@@ -37,12 +35,10 @@ jobs:
           dotnet-version: 11.0.100
       - run: sudo xcode-select --switch /Applications/Xcode_27.2.app/Contents/Developer
       - run: dotnet workload install ios --version 11.0.100.1
+      - name: Enable strict analyzer rules
+        run: cp ../../.editorconfig.ci ../../.editorconfig
       - run: dotnet build HealthSyncy.Mobile.EntryPoint -c Release -r iossimulator-arm64 -p:EnableCodeSigning=true -p:CodesignKey=- -p:CodesignEntitlements=DeviceEntitlements.plist -p:CodesignRequireProvisioningProfile=false
-      - name: Check the rule set
-        run: |
-          cp ../../.editorconfig.ci ../../.editorconfig
-          dotnet format HealthSyncy.Mobile.EntryPoint --verify-no-changes
-          git checkout ../../.editorconfig
+      - run: dotnet format HealthSyncy.Mobile.EntryPoint --verify-no-changes
       - name: Install and launch the iPhone companion
         shell: bash
         run: |

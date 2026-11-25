@@ -29,11 +29,12 @@ Pull requests run the build, the rule-set check, the unit tests with a coverage 
 
 ## Rules and coverage
 
-Warnings fail the build. CI also verifies the stricter rule set in `.editorconfig.ci`. To apply it before you push, run these commands.
+CI compiles the solution and the iPhone app with the rules in `.editorconfig.ci`. Analyzer warnings fail the build. To check the solution locally, run these commands.
 
 ```sh
 cp .editorconfig.ci .editorconfig
-dotnet format HealthSyncy.slnx
+dotnet build HealthSyncy.slnx -c Release
+dotnet format HealthSyncy.slnx --verify-no-changes --no-restore
 git checkout .editorconfig
 ```
 
