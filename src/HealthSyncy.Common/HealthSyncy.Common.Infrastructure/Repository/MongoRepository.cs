@@ -26,6 +26,7 @@ internal sealed class MongoRepository<T>(IMongoDatabase database) : IRepository<
         CancellationToken cancellationToken = default)
     {
         var replaceable = ById(entity.Id) & Builders<T>.Filter.Where(canReplace);
+        var isReplaceable = canReplace.Compile();
         while (true)
         {
             try
@@ -36,7 +37,7 @@ internal sealed class MongoRepository<T>(IMongoDatabase database) : IRepository<
             catch (MongoWriteException error) when (error.WriteError.Category == ServerErrorCategory.DuplicateKey)
             {
                 var stored = await _collection.Find(ById(entity.Id)).SingleAsync(cancellationToken);
-                if (!canReplace.Compile()(stored))
+                if (!isReplaceable(stored))
                     return new(false, stored);
             }
         }

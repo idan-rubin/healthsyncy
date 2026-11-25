@@ -38,9 +38,10 @@ dotnet format HealthSyncy.slnx --verify-no-changes --no-restore
 git checkout .editorconfig
 ```
 
-Pull requests fail below 90% line coverage. To measure it locally, run these commands.
+Pull requests fail below 90% line coverage. To measure it locally, run these commands. The first one clears reports from earlier runs.
 
 ```sh
+rm -rf TestResults
 dotnet test --solution HealthSyncy.slnx -c Release --coverage --coverage-output-format cobertura --results-directory "$PWD/TestResults"
 python3 checks/coverage.py TestResults 90
 ```

@@ -15,6 +15,7 @@ using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace HealthSyncy.Admin.UnitTests;
@@ -252,6 +253,20 @@ public sealed class AdminPortalTests : IDisposable
     }
 
     [Fact]
+    public async Task Reports_not_ready_while_MongoDB_is_unreachable()
+    {
+        using var offline = _factory.WithWebHostBuilder(host => host
+            .ConfigureTestServices(services => services.AddSingleton(UnreachableDatabase())));
+        using var client = offline.CreateClient();
+
+        using var ready = await client.GetAsync(new Uri("/readyz", UriKind.Relative), Cancellation);
+        using var live = await client.GetAsync(new Uri("/healthz", UriKind.Relative), Cancellation);
+
+        ready.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
+        live.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
     public void Refuses_to_start_with_a_reporting_zone_that_is_not_an_IANA_zone()
     {
         using var misconfigured = _factory.WithWebHostBuilder(host => host.UseSetting("ReportingZone", "America/NewYork"));
@@ -331,5 +346,14 @@ public sealed class AdminPortalTests : IDisposable
     {
         using var form = new FormUrlEncodedContent(fields.Select(field => KeyValuePair.Create(field.Name, field.Value)));
         return await _client.PostAsync(new Uri(path, UriKind.Relative), form, Cancellation);
+    }
+
+    private static IMongoDatabase UnreachableDatabase()
+    {
+        var database = new Mock<IMongoDatabase>();
+        database.Setup(mongo => mongo.RunCommandAsync(
+                It.IsAny<Command<BsonDocument>>(), It.IsAny<ReadPreference>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new TimeoutException("No server available."));
+        return database.Object;
     }
 }

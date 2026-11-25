@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace HealthSyncy.Sync.UnitTests;
@@ -150,6 +151,20 @@ public sealed class SyncApiTests : IDisposable
     }
 
     [Fact]
+    public async Task Reports_not_ready_while_MongoDB_is_unreachable()
+    {
+        using var offline = _factory.WithWebHostBuilder(host => host
+            .ConfigureTestServices(services => services.AddSingleton(UnreachableDatabase())));
+        using var client = offline.CreateClient();
+
+        using var ready = await client.GetAsync(new Uri("/readyz", UriKind.Relative), Cancellation);
+        using var live = await client.GetAsync(new Uri("/healthz", UriKind.Relative), Cancellation);
+
+        ready.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
+        live.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
     public void Refuses_to_start_with_a_malformed_token_digest()
     {
         using var misconfigured = _factory.WithWebHostBuilder(host => host.UseSetting("UploadTokenSha256", "secret"));
@@ -175,5 +190,14 @@ public sealed class SyncApiTests : IDisposable
         if (token is not null)
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return await client.SendAsync(request, Cancellation);
+    }
+
+    private static IMongoDatabase UnreachableDatabase()
+    {
+        var database = new Mock<IMongoDatabase>();
+        database.Setup(mongo => mongo.RunCommandAsync(
+                It.IsAny<Command<BsonDocument>>(), It.IsAny<ReadPreference>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new TimeoutException("No server available."));
+        return database.Object;
     }
 }
