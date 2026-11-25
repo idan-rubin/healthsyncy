@@ -1,10 +1,12 @@
-<img src="docs/app-icon.png" width="72" height="72" alt="">
+![With sync enabled, daily activity totals go from your iPhone to your server, where an authorized MCP client can read them.](docs/banner.svg)
 
 # HealthSyncy
 
 **Share today’s Apple Health activity. Ask about your week.**
 
-Copy your daily totals straight from your iPhone, or connect ChatGPT to a read-only MCP server you host. You choose which Health categories the companion can read.
+Built with [C# 15] and [.NET 11], from [.NET for iOS] on the iPhone to [ASP.NET Core] on the server. For server sign-in, use [Keycloak] or another OpenID Connect provider.
+
+Copy your daily totals straight from your iPhone, or let ChatGPT read them through a Model Context Protocol (MCP) server you host. You choose which Apple Health categories to share.
 
 With my food log in the chat, I can ask “How does today’s calorie intake compare with what I’ve burned so far?” HealthSyncy supplies my active and resting calories from Apple Health. I wrote about trading daily screenshots for that conversation in [AI, Meet Apple Health](https://mrrubin.substack.com/p/ai-meet-apple-health).
 
@@ -24,9 +26,9 @@ Stand: 9 h
 
 ## Ask about your week
 
-“Which day did I walk the most this week?” With the server connected, ChatGPT can look up daily totals through the Model Context Protocol (MCP). Results include capture times so you can tell how recent they are. Each sync refreshes today and the previous six days. iOS controls when background updates run.
+“Which day did I walk the most this week?” With the server connected, ChatGPT can look up daily totals through the read-only MCP connector. Results include capture times so you can tell how recent they are. Each sync refreshes today and the previous six days. iOS controls when background updates run.
 
-1. [Deploy the three services and MongoDB](docs/self-hosting.md). You’ll need a K3s cluster, public HTTPS and an OpenID Connect provider. Each instance serves one person.
+1. [Deploy the three services and MongoDB](docs/self-hosting.md). You’ll need a [K3s](https://docs.k3s.io/) cluster, public HTTPS and an OpenID Connect provider. Each instance serves one person.
 2. [Pair your iPhone](docs/iphone.md#pair-with-your-server) and check the first upload against Apple Health.
 3. [Connect ChatGPT via OAuth](docs/self-hosting.md#connect-chatgpt) with an account or workspace that supports custom MCP servers.
 
@@ -47,7 +49,19 @@ The companion can read steps, active and resting energy, exercise minutes, stand
 
 ## Why C#?
 
-I chose C# because I love it. Here it runs on both sides of the sync, from reading HealthKit on the iPhone to answering MCP calls on the server. The repository doubles as a C# case study. [How the code is organised](docs/architecture.md#how-the-code-is-organised) shows where each pattern and language feature lives.
+I chose C# because I love it. The iPhone app uses [UIKit] for its interface and [HealthKit] to read activity. On the server, [MongoDB] stores daily totals and the [MCP C# SDK] makes them available to authorized clients.
+
+[How the code is organised](docs/architecture.md#how-the-code-is-organised) shows where each pattern and language feature lives.
+
+[C# 15]: https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-15
+[.NET 11]: https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-11/overview
+[.NET for iOS]: https://learn.microsoft.com/en-us/dotnet/ios/
+[UIKit]: https://developer.apple.com/documentation/uikit
+[HealthKit]: https://developer.apple.com/documentation/healthkit
+[ASP.NET Core]: https://learn.microsoft.com/en-us/aspnet/core/overview?view=aspnetcore-11.0
+[Keycloak]: https://www.keycloak.org/securing-apps/oidc-layers
+[MongoDB]: https://www.mongodb.com/docs/manual/
+[MCP C# SDK]: https://csharp.sdk.modelcontextprotocol.io/v2/
 
 ## Project guides
 
