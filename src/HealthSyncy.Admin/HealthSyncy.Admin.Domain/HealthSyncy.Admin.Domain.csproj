@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../HealthSyncy.Admin.Contracts/HealthSyncy.Admin.Contracts.csproj" />
+    <ProjectReference Include="../../HealthSyncy.Common/HealthSyncy.Common.Infrastructure/HealthSyncy.Common.Infrastructure.csproj" />
+    <InternalsVisibleTo Include="HealthSyncy.Admin.UnitTests" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+  </ItemGroup>
+</Project>

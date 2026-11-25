@@ -1,7 +1,32 @@
 <Solution>
-  <Project Path="src/Libraries/HealthSyncy.Core/HealthSyncy.Core.csproj" />
-  <Project Path="src/Libraries/HealthSyncy.BL/HealthSyncy.BL.csproj" />
-  <Project Path="src/Services/HealthSyncy.Sync/HealthSyncy.Sync.EntryPoint/HealthSyncy.Sync.EntryPoint.csproj" />
-  <Project Path="src/Services/HealthSyncy.Connector/HealthSyncy.Connector.EntryPoint/HealthSyncy.Connector.EntryPoint.csproj" />
-  <Project Path="src/Services/HealthSyncy.Admin/HealthSyncy.Admin.EntryPoint/HealthSyncy.Admin.EntryPoint.csproj" />
+  <Folder Name="/Common/">
+    <Project Path="src/HealthSyncy.Common/HealthSyncy.Common.Contracts/HealthSyncy.Common.Contracts.csproj" />
+    <Project Path="src/HealthSyncy.Common/HealthSyncy.Common.Infrastructure/HealthSyncy.Common.Infrastructure.csproj" />
+    <Project Path="tests/unit/HealthSyncy.Common.UnitTests/HealthSyncy.Common.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/Sync/">
+    <Project Path="src/HealthSyncy.Sync/HealthSyncy.Sync.Contracts/HealthSyncy.Sync.Contracts.csproj" />
+    <Project Path="src/HealthSyncy.Sync/HealthSyncy.Sync.Domain/HealthSyncy.Sync.Domain.csproj" />
+    <Project Path="src/HealthSyncy.Sync/HealthSyncy.Sync.EntryPoint/HealthSyncy.Sync.EntryPoint.csproj" />
+    <Project Path="tests/unit/HealthSyncy.Sync.UnitTests/HealthSyncy.Sync.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/Connector/">
+    <Project Path="src/HealthSyncy.Connector/HealthSyncy.Connector.Contracts/HealthSyncy.Connector.Contracts.csproj" />
+    <Project Path="src/HealthSyncy.Connector/HealthSyncy.Connector.Domain/HealthSyncy.Connector.Domain.csproj" />
+    <Project Path="src/HealthSyncy.Connector/HealthSyncy.Connector.EntryPoint/HealthSyncy.Connector.EntryPoint.csproj" />
+    <Project Path="tests/unit/HealthSyncy.Connector.UnitTests/HealthSyncy.Connector.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/Admin/">
+    <Project Path="src/HealthSyncy.Admin/HealthSyncy.Admin.Contracts/HealthSyncy.Admin.Contracts.csproj" />
+    <Project Path="src/HealthSyncy.Admin/HealthSyncy.Admin.Domain/HealthSyncy.Admin.Domain.csproj" />
+    <Project Path="src/HealthSyncy.Admin/HealthSyncy.Admin.EntryPoint/HealthSyncy.Admin.EntryPoint.csproj" />
+    <Project Path="tests/unit/HealthSyncy.Admin.UnitTests/HealthSyncy.Admin.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/Mobile/">
+    <Project Path="src/HealthSyncy.Mobile/HealthSyncy.Mobile.Domain/HealthSyncy.Mobile.Domain.csproj" />
+    <Project Path="tests/unit/HealthSyncy.Mobile.UnitTests/HealthSyncy.Mobile.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/Checks/">
+    <Project Path="checks/HealthSyncy.Checks/HealthSyncy.Checks.csproj" />
+  </Folder>
 </Solution>

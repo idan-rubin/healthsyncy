@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <ProjectReference Include="../HealthSyncy.Sync.Domain/HealthSyncy.Sync.Domain.csproj" />
+    <InternalsVisibleTo Include="HealthSyncy.Sync.UnitTests" />
+  </ItemGroup>
+</Project>

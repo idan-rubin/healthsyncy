@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="MongoDB.Driver" Version="3.14.1" />
+    <ProjectReference Include="../HealthSyncy.Common.Contracts/HealthSyncy.Common.Contracts.csproj" />
+    <InternalsVisibleTo Include="HealthSyncy.Common.UnitTests" />
+  </ItemGroup>
+</Project>

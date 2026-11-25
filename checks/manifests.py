@@ -45,6 +45,6 @@ for p in root.glob("**/*.csproj"):
         assert (p.parent/ref.attrib["Include"]).is_file()
 for p in ET.parse(root/"HealthSyncy.slnx").iter("Project"):
     assert (root/p.attrib["Path"]).is_file()
-for p in root.glob("mobile/**/*.plist"):
+for p in root.glob("src/HealthSyncy.Mobile/**/*.plist"):
     plistlib.loads(p.read_bytes())
 print("Deployment manifests, project references and iOS plists passed.")

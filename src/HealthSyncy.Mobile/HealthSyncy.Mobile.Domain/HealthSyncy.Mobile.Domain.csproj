@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../HealthSyncy.Sync/HealthSyncy.Sync.Contracts/HealthSyncy.Sync.Contracts.csproj" />
+    <InternalsVisibleTo Include="HealthSyncy.Mobile.UnitTests" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+  </ItemGroup>
+</Project>

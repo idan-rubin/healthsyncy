@@ -1,9 +1,9 @@
 FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 ARG SERVICE
 WORKDIR /src
-COPY Directory.Build.props .
+COPY Directory.Build.props .editorconfig .globalconfig ./
 COPY src/ src/
-RUN dotnet publish "src/Services/HealthSyncy.${SERVICE}/HealthSyncy.${SERVICE}.EntryPoint/HealthSyncy.${SERVICE}.EntryPoint.csproj" -c Release -o /out -p:UseAppHost=false
+RUN dotnet publish "src/HealthSyncy.${SERVICE}/HealthSyncy.${SERVICE}.EntryPoint/HealthSyncy.${SERVICE}.EntryPoint.csproj" -c Release -o /out -p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:11.0
 ARG SERVICE

@@ -1,4 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><OutputType>Exe</OutputType></PropertyGroup>
-  <ItemGroup><ProjectReference Include="../../src/Libraries/HealthSyncy.BL/HealthSyncy.BL.csproj" /></ItemGroup>
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/HealthSyncy.Sync/HealthSyncy.Sync.Domain/HealthSyncy.Sync.Domain.csproj" />
+    <ProjectReference Include="../../src/HealthSyncy.Connector/HealthSyncy.Connector.Domain/HealthSyncy.Connector.Domain.csproj" />
+    <ProjectReference Include="../../src/HealthSyncy.Admin/HealthSyncy.Admin.Domain/HealthSyncy.Admin.Domain.csproj" />
+  </ItemGroup>
 </Project>

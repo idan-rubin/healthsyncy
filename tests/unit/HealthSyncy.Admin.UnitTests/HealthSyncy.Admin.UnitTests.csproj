@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="11.0.0" />
+    <ProjectReference Include="../../../src/HealthSyncy.Admin/HealthSyncy.Admin.EntryPoint/HealthSyncy.Admin.EntryPoint.csproj" />
+  </ItemGroup>
+</Project>

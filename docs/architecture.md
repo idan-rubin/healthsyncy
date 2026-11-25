@@ -36,29 +36,55 @@ The phone uploads to Sync. An authorized client reads through Connector. Admin u
 | Connector | Answers daily and seven-day queries through MCP and exposes a daily REST endpoint | Reads snapshots only |
 | Admin | Displays activity, capture and receipt times, freshness alerts, and a seven-day history. Lets the owner pause uploads and set the alert threshold | Reads snapshots and manages settings |
 
-The code has three layers:
+## How the code is organised
 
-| Layer | Location | Holds |
+The repository is also a C# case study, so the layout is deliberate. Each domain is a folder under `src` with up to three projects.
+
+| Project | Holds | References |
 | --- | --- | --- |
-| Entry points | `src/Services/HealthSyncy.*/HealthSyncy.*.EntryPoint` | Controllers, MCP tools and the admin page. Each one checks its parameters, calls the business logic and maps the result to a response |
-| Business logic | `src/Libraries/HealthSyncy.BL` | The rules: which uploads are accepted, which snapshot wins, what a week is and when a snapshot is stale |
-| Contracts and storage | `src/Libraries/HealthSyncy.Core` | The shared records and the MongoDB reads and writes |
+| `HealthSyncy.<Domain>.Contracts` | The records and enums that cross a boundary, such as request and response bodies | Other contracts only |
+| `HealthSyncy.<Domain>.Domain` | The rules of the domain behind interfaces, and the `DI` registration that maps them | Its contracts and `Common` |
+| `HealthSyncy.<Domain>.EntryPoint` | The host. A controller, MCP tool, page or app delegate checks its parameters, makes one call into the domain and maps the result | Its domain project |
 
-Each layer depends on interfaces of the one below it, one interface per responsibility:
-
-| Interface | Implementation | Responsibility |
+| Domain | Entry point | Rules |
 | --- | --- | --- |
-| `IUploadBL` | `UploadBL` | Accepts or rejects an upload |
-| `IActivityBL` | `ActivityBL` | Reads a day or a week |
-| `IAdminBL` | `AdminBL` | Builds the dashboard overview and saves settings |
-| `IReadinessBL` | `ReadinessBL` | Answers the readiness probe |
-| `ISnapshotStore` | `SnapshotStore` | Reads and writes daily snapshots |
-| `ISettingsStore` | `SettingsStore` | Reads and writes the sync settings |
-| `IStoreProbe` | `StoreProbe` | Pings the database |
+| `Sync` | `DaysController` takes uploads from the phone | `IUploadService` decides whether an upload is saved, a duplicate, superseded, conflicting, rejected or paused |
+| `Connector` | `ActivityController`, `MetadataController` and the MCP `ActivityTools` | `IActivityService` reads a day or a week |
+| `Admin` | The Razor page `Pages/Index` | `IAdminService` builds the overview and saves settings |
+| `Mobile` | `AppDelegate` on the iPhone | `ISyncService` and `ISummaryService` hold the rules. `ISyncServiceAgent` makes the HTTP call to Sync. The app implements `IHealthReader` with HealthKit and `IPairingRepository` with the keychain |
+| `Common` | None | `Common.Contracts` holds the shared records. `Common.Infrastructure` holds the repository, the MongoDB health check and option validation |
 
-The `DI` folder of each project maps its interfaces to their implementations. Entry points never call storage.
+`Common` is split in two so the phone can share the records without referencing MongoDB or ASP.NET Core.
 
-The iPhone companion in `mobile/HealthSyncy.iOS` follows the same shape. The app delegate is the entry point. `ISyncBL` and `ISummaryBL` hold the rules, `ISyncServiceAgent` makes the HTTP call to Sync, `IHealthReader` reads HealthKit and `IPairingStore` keeps the pairing in the keychain. `DI/MobileRegistration.cs` maps them.
+Storage sits behind one generic interface, `IRepository<T>`, with one implementation, `MongoRepository<T>`. An entity names its collection through a static abstract member of `IEntity`, and the container maps the open generic once. Queries that belong to one entity, such as a week of snapshots, are extension members on `IRepository<SnapshotEntity>`. The rule for which snapshot wins stays in the Sync domain. `UploadService` hands the repository a condition, and the repository applies it in one atomic write.
+
+### Patterns and language features
+
+| Pattern or feature | Where to look |
+| --- | --- |
+| Interfaces and dependency injection | Each `DI` folder maps interfaces to implementations, and each `Program.cs` composes them |
+| Generic repository | `Common.Infrastructure/Repository` |
+| Result as a union type | `Sync.Domain/UploadOutcome.cs` and the exhaustive `switch` in `DaysController` |
+| Records | Every `Contracts` project and the two entities |
+| Extension members | The `DI` registrations, `SnapshotQueries` and `SettingsQueries` |
+| Static abstract interface members | `IEntity.Collection` |
+| Options validated at startup | `SyncOptions`, `ConnectorOptions`, `AdminOptions` and `MongoOptions` |
+| Custom validation attribute | `HttpsUrlAttribute` |
+| Custom authentication handler | `Sync.EntryPoint/Auth/UploadTokenHandler.cs` |
+| Policy-based authorization | `ConnectorServiceRegistration` |
+| Health checks | `MongoHealthCheck` behind `/readyz` |
+| Pattern matching | `UploadService`, `AdminService` and `Pairing.Create` |
+| `TimeProvider` for testable time | `UploadService`, `AdminService`, `SyncService` and `SummaryService` |
+| Source-generated JSON | `Mobile.Domain/MobileJson.cs`, which keeps serialization safe under ahead-of-time compilation on iOS |
+| Service agent for outbound HTTP | `Mobile.Domain/ServiceAgents` |
+| Events | `ISyncService.Uploaded` |
+| Coalescing concurrent work | `Mobile.Domain/Services/SyncQueue.cs` |
+
+### Rules and tests
+
+The code follows the rule set in `.editorconfig.ci` and `.globalconfig`, with Meziantou.Analyzer on every project. Warnings fail the build, a namespace matches its folder and each type has its own file. Test files are exempt from one rule, the unused-value check, because fluent assertion chains return a value.
+
+Each domain has a unit-test project under `tests/unit`, written with xUnit, FluentAssertions and AutoMocker. The HTTP tests run each service in memory: Sync with its real token check, Connector with real token validation, and Admin through a full sign-in against a stub issuer. Pull requests fail below 90% line coverage. That figure covers the hand-written code in every project except the iPhone entry point, whose UIKit, HealthKit and keychain code runs only on a device. `checks/mongo.sh` covers what mocks cannot, which is concurrent writes and permissions against a real MongoDB.
 
 ## What gets synced
 

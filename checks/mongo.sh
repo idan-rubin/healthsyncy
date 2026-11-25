@@ -3,8 +3,6 @@ set -euo pipefail
 export MONGO_INITDB_ROOT_USERNAME=fixture
 export MONGO_INITDB_ROOT_PASSWORD=$(openssl rand -hex 24)
 export MONGO_SYNC=$(openssl rand -hex 24) MONGO_CONNECTOR=$(openssl rand -hex 24) MONGO_ADMIN=$(openssl rand -hex 24)
-# On macOS, .NET uses the system keychain for TLS. Run the fixture in Linux
-# so its throwaway issuer stays local to the suite.
 linux_fixture=false
 if [[ $(uname -s) == Darwin || ${1:-} == --container ]]; then
   linux_fixture=true
